@@ -1,0 +1,70 @@
+<graphs>
+  <graph name="QueryBuilder" initial_node="Initial">
+    <edges>
+      <edge name="Select" target="PostSelect">
+        <signature name="select">
+          <arg name="columns" typeName="string" vararg="true" />
+        </signature>
+      </edge>
+      <edge name="From" target="PostFrom">
+        <signature name="from">
+          <arg name="table" typeName="string" />
+        </signature>
+      </edge>
+      <edge name="Where" target="PostWhere">
+        <signature name="where">
+          <arg name="expression" typeName="string" />
+        </signature>
+      </edge>
+      <edge name="GroupBy" target="PostGroupBy">
+        <signature name="groupBy">
+          <arg name="column" typeName="string" />
+        </signature>
+      </edge>
+      <edge name="OrderBy" target="PostOrderBy">
+        <signature name="orderBy">
+          <arg name="columns" typeName="string" vararg="true" />
+        </signature>
+      </edge>
+      <edge name="OrderDirection" target="PostOrderDirection">
+        <signature name="asc" />
+        <signature name="desc" />
+      </edge>
+    </edges>
+    <actions>
+      <action name="BuildQuery">
+        <signature name="build" return="string" />
+      </action>
+    </actions>
+
+    <nodes>
+      <node name="Initial">
+        <include-edge name="Select" />
+      </node>
+      <node name="PostSelect">
+        <include-edge name="From" />
+      </node>
+      <node name="PostFrom">
+        <include-edge name="Where" />
+        <include-edge name="GroupBy" />
+        <include-edge name="OrderBy" />
+        <include-action name="BuildQuery" />
+      </node>
+      <node name="PostWhere">
+        <include-edge name="GroupBy" />
+        <include-edge name="OrderBy" />
+        <include-action name="BuildQuery" />
+      </node>
+      <node name="PostGroupBy">
+        <include-edge name="OrderBy" />
+        <include-action name="BuildQuery" />
+      </node>
+      <node name="PostOrderBy">
+        <include-edge name="OrderDirection" />
+      </node>
+      <node name="PostOrderDirection">
+        <include-action name="BuildQuery" />
+      </node>
+    </nodes>
+  </graph>
+</graphs>
