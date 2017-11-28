@@ -69,19 +69,27 @@ public class BuilderPatternCompiler extends GraphCompiler {
         List<ClassModel> ret = new ArrayList<>();
 
         ImplementationModel implementationModel = createImplementationModel(model);
-        ret.add(implementationModel.implementationClass);
-        ret.add(createApi(model, implementationModel));
-        ret.add(createMainClass(model, implementationModel));
+        final ClassModel implementationClass = implementationModel.implementationClass;
+        final ClassModel apiClass = createApi(model, implementationModel);
+        final ClassModel mainClass = createMainClass(model, implementationModel);
+
+        mainClass.requiredClasses.add(apiClass);
+        mainClass.requiredClasses.add(implementationClass);
+        apiClass.requiredClasses.add(implementationClass);
+
+        ret.add(implementationClass);
+        ret.add(apiClass);
+        ret.add(mainClass);
 
         return ret;
     }
-
 
     private ClassModel createApi(GraphModel model, ImplementationModel implementationModel) throws GraphCompilerException {
         ClassModel apiClass = new ClassModel(model.name + "Api");
         final Map<String, InterfaceModel> interfaces = new HashMap<>();
         final TypeModel contentClassType = new TypeModel(implementationModel.contentClass);
         final FieldModel contentField = new FieldModel(contentClassType, "content");
+        contentField.visibility = Visibility.PRIVATE;
         final CodeModel.ArgumentModel contentMethodArgument = new CodeModel.ArgumentModel(contentField.type, contentField.name);
         final CodeModel.ArgumentModel contentConstructorArgument = new CodeModel.ArgumentModel(contentField.type, "_" + contentField.name);
 
@@ -115,7 +123,7 @@ public class BuilderPatternCompiler extends GraphCompiler {
                 logicMethodModel.argumentModels.add(0, contentMethodArgument);
                 logicMethodModel._static = true;
                 if (logicMethodModel.returnType != TypeModel.TYPE_VOID) {
-                    logicMethodModel.methodBody.add(new ReturnInstructionModel(null));
+                    logicMethodModel.methodBody.add(new ReturnInstructionModel(new NullValueModel()));
                 }
                 implementationModel.logicClass.methodModels.add(logicMethodModel);
             }

@@ -248,6 +248,11 @@ public class JavaCodeGenerator extends CodeGenerator {
         }
 
         @Override
+        public String visit(NullValueModel nullValueModel) {
+            return "null";
+        }
+
+        @Override
         public String visit(VariableModel variableModel) {
             return variableModel.name;
         }
@@ -264,7 +269,7 @@ public class JavaCodeGenerator extends CodeGenerator {
 
         @Override
         public String visit(ReturnInstructionModel returnInstructionModel) {
-            return "return " + ((returnInstructionModel.returnedStatement != null) ? returnInstructionModel.returnedStatement.accept(this) : "null");
+            return "return " + returnInstructionModel.returnedStatement.accept(this);
         }
 
         @Override
@@ -310,6 +315,4 @@ public class JavaCodeGenerator extends CodeGenerator {
             return ret.toString();
         }
     }
-
-    ;
 }

@@ -54,6 +54,13 @@ public class Main {
                 .hasArg(true)
                 .build();
 
+        Option cppNamespaceOption = Option.builder("cn")
+                .required(false)
+                .desc("Java package name")
+                .longOpt("cpp-namespace")
+                .hasArg(true)
+                .build();
+
         Options options = new Options();
         CommandLineParser parser = new DefaultParser();
 
@@ -61,6 +68,7 @@ public class Main {
         options.addOption(outputOption);
         options.addOption(languageOption);
         options.addOption(javaPackageOption);
+        options.addOption(cppNamespaceOption);
 
         try {
             CommandLine commandLine = parser.parse(options, args, false);
@@ -68,7 +76,6 @@ public class Main {
             GraphsModel graphsModel = graphsParser.parse();
             GraphCompiler analyzer = new BuilderPatternCompiler(graphsModel); // TODO: add analyzer switch
             CodeModel codeModel = analyzer.analyze();
-            // TODO: add java package name option
             final String targetLanguage = commandLine.getOptionValue("l");
             final String outputDirectory = commandLine.getOptionValue("o");
             CodeGenerator codeGenerator;
@@ -76,7 +83,8 @@ public class Main {
                 final String packageName = commandLine.getOptionValue("jp");
                 codeGenerator = new JavaCodeGenerator(outputDirectory, codeModel, packageName);
             } else if ("cpp".equals(targetLanguage)) {
-                codeGenerator = new CppCodeGenerator(outputDirectory, codeModel);
+                final String namespaceName = commandLine.getOptionValue("cn");
+                codeGenerator = new CppCodeGenerator(outputDirectory, codeModel, namespaceName);
             } else {
                 throw new ParseException("Unsupported language: " + targetLanguage);
             }

@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Main" type="Application" factoryName="Application" singleton="true" nameIsGenerated="true">
+  <configuration default="false" name="Main - CPP" type="Application" factoryName="Application" singleton="true">
     <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
       <pattern>
         <option name="PATTERN" value="com.rushingvise.metagen.parser.GraphsParser" />
@@ -8,7 +8,7 @@
     </extension>
     <option name="MAIN_CLASS_NAME" value="com.rushingvise.metagen.Main" />
     <option name="VM_PARAMETERS" value="" />
-    <option name="PROGRAM_PARAMETERS" value="-input ../../specs/sql.xml -output ../../sample/java/MetagenProto/src/com/rushingvise/metagen/sql -language java -java-package com.rushingvise.metagen.sql" />
+    <option name="PROGRAM_PARAMETERS" value="-input ../../specs/sql.xml -output ../../sample/cpp/MetagenProto/src/sql -language cpp -cpp-namespace sql" />
     <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
     <option name="ALTERNATIVE_JRE_PATH" />

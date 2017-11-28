@@ -15,12 +15,12 @@ limitations under the License.
  */
 
 #include <iostream>
-#include "QueryBuilder.h"
+#include "sql/QueryBuilder.h"
 
 int main() {
-    sqleicht::QueryBuilder builder;
+    sql::QueryBuilder builder;
 
-    auto result = builder.select({ "id", "user", "pass" }).from("users").where("id > 3").orderBy("id").asc().build();
+    auto result = builder.select({ "id", "user", "pass" }).from("users").where("id > 3").orderBy({ "id" }).asc().build();
 
     std::cout << result << std::endl;
     return 0;

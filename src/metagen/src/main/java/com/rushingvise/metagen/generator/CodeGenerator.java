@@ -71,11 +71,15 @@ public abstract class CodeGenerator {
         }
 
         public void block(String line, CodeBlock block) throws CodeGeneratorException {
+            block(line, block, "");
+        }
+
+        public void block(String line, CodeBlock block, String blockSuffix) throws CodeGeneratorException {
             println(line + " {");
             mIndentation.append(mSingleIndent);
             block.writeBlock();
             mIndentation.setLength(mIndentation.length() - INDENT_WIDTH);
-            mWriter.println(mIndentation.toString() + "}");
+            mWriter.println(mIndentation.toString() + "}" + blockSuffix);
         }
 
         public interface CodeBlock {
@@ -87,6 +91,8 @@ public abstract class CodeGenerator {
         String visit(StringValueModel stringValueModel);
 
         String visit(IntegerValueModel integerValueModel);
+
+        String visit(NullValueModel nullValueModel);
 
         String visit(VariableModel variableModel);
 

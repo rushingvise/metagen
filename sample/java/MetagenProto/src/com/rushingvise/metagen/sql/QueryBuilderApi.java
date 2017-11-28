@@ -34,7 +34,7 @@ public class QueryBuilderApi  {
     }
 
     public static class InitialStep implements ISelectTransition {
-        public QueryBuilderImpl.Content content;
+        private QueryBuilderImpl.Content content;
 
         public InitialStep(QueryBuilderImpl.Content _content) {
             content = _content;
@@ -48,7 +48,7 @@ public class QueryBuilderApi  {
 
     }
     public static class PostSelectStep implements IFromTransition {
-        public QueryBuilderImpl.Content content;
+        private QueryBuilderImpl.Content content;
 
         public PostSelectStep(QueryBuilderImpl.Content _content) {
             content = _content;
@@ -62,7 +62,7 @@ public class QueryBuilderApi  {
 
     }
     public static class PostFromStep implements IBuildQueryTransformation, IWhereTransition, IGroupByTransition, IOrderByTransition {
-        public QueryBuilderImpl.Content content;
+        private QueryBuilderImpl.Content content;
 
         public PostFromStep(QueryBuilderImpl.Content _content) {
             content = _content;
@@ -93,7 +93,7 @@ public class QueryBuilderApi  {
 
     }
     public static class PostWhereStep implements IBuildQueryTransformation, IGroupByTransition, IOrderByTransition {
-        public QueryBuilderImpl.Content content;
+        private QueryBuilderImpl.Content content;
 
         public PostWhereStep(QueryBuilderImpl.Content _content) {
             content = _content;
@@ -118,7 +118,7 @@ public class QueryBuilderApi  {
 
     }
     public static class PostGroupByStep implements IBuildQueryTransformation, IOrderByTransition {
-        public QueryBuilderImpl.Content content;
+        private QueryBuilderImpl.Content content;
 
         public PostGroupByStep(QueryBuilderImpl.Content _content) {
             content = _content;
@@ -137,7 +137,7 @@ public class QueryBuilderApi  {
 
     }
     public static class PostOrderByStep implements IOrderDirectionTransition {
-        public QueryBuilderImpl.Content content;
+        private QueryBuilderImpl.Content content;
 
         public PostOrderByStep(QueryBuilderImpl.Content _content) {
             content = _content;
@@ -157,7 +157,7 @@ public class QueryBuilderApi  {
 
     }
     public static class PostOrderDirectionStep implements IBuildQueryTransformation {
-        public QueryBuilderImpl.Content content;
+        private QueryBuilderImpl.Content content;
 
         public PostOrderDirectionStep(QueryBuilderImpl.Content _content) {
             content = _content;

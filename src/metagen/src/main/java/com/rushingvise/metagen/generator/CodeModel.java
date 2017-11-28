@@ -35,6 +35,7 @@ public class CodeModel {
 
     public static class ClassModel {
         public String name;
+        public List<ClassModel> requiredClasses = new ArrayList<>();
         public ClassModel containerClass;
         public ClassModel superClass;
         public List<ConstructorModel> constructorModels = new ArrayList<>();
@@ -129,6 +130,7 @@ public class CodeModel {
 
         public final ClassModel classModel;
         public final String name;
+        public boolean reference;
 
         public TypeModel(String name) {
             this.name = name;
@@ -171,6 +173,13 @@ public class CodeModel {
             this.value = value;
         }
 
+        @Override
+        public String accept(CodeGenerator.InstructionModelSerializer visitor) {
+            return visitor.visit(this);
+        }
+    }
+
+    public static class NullValueModel implements RValueModel {
         @Override
         public String accept(CodeGenerator.InstructionModelSerializer visitor) {
             return visitor.visit(this);

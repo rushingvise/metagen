@@ -17,6 +17,6 @@ We wanted to create a decent C++ API for building complex SQL queries in a more 
 ## Usage
 
 The project is still work in progress, at the moment we are focusing on supporting the Builder pattern for both C++ and Java.
-First you can see what is being generated based on `specs/sql.xml` in `sample/java/MetagenProto`.
+First you can see what is being generated based on `specs/sql.xml` in `sample/java/MetagenProto` and in `sample/cpp/MetagenProto`.
 The generator code can be found in `src/metagen`.
 Simply run `mvn exec:java` in `src/metagen` to see the supported options.
