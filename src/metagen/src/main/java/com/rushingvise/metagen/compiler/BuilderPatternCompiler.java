@@ -93,12 +93,19 @@ public class BuilderPatternCompiler extends GraphCompiler {
         final CodeModel.ArgumentModel contentMethodArgument = new CodeModel.ArgumentModel(contentField.type, contentField.name);
         final CodeModel.ArgumentModel contentConstructorArgument = new CodeModel.ArgumentModel(contentField.type, "_" + contentField.name);
 
+        final Map<String, ClassModel> classesCache = new HashMap<>();
+
         for (EdgeModel edgeModel : model.edges) {
             InterfaceModel interfaceModel = new InterfaceModel(convertName(edgeModel));
             NodeModel targetNode = findNamedItem(model.nodes, edgeModel.target);
             String targetStateName = convertName(targetNode);
+            ClassModel targetStateClass = classesCache.get(targetStateName);
+            if (targetStateClass == null) {
+                targetStateClass = new ClassModel(targetStateName, apiClass);
+                classesCache.put(targetStateClass.name, targetStateClass);
+            }
             for (SignatureModel signatureModel : edgeModel.signatures) {
-                MethodModel methodModel = convertSignature(signatureModel, targetStateName);
+                MethodModel methodModel = convertTransitionSignature(signatureModel, targetStateClass);
                 interfaceModel.methodModels.add(methodModel);
 
                 MethodModel logicMethodModel = methodModel.copy();
@@ -115,7 +122,7 @@ public class BuilderPatternCompiler extends GraphCompiler {
         for (ActionModel actionModel : model.actions) {
             InterfaceModel interfaceModel = new InterfaceModel(convertName(actionModel));
             for (SignatureModel signatureModel : actionModel.signatures) {
-                MethodModel methodModel = convertSignature(signatureModel);
+                MethodModel methodModel = convertTransitionSignature(signatureModel);
                 interfaceModel.methodModels.add(methodModel);
 
                 MethodModel logicMethodModel = methodModel.copy();
@@ -132,7 +139,12 @@ public class BuilderPatternCompiler extends GraphCompiler {
         }
 
         for (NodeModel nodeModel : model.nodes) {
-            ClassModel classModel = new ClassModel(convertName(nodeModel), apiClass);
+            String className = convertName(nodeModel);
+            ClassModel classModel = classesCache.get(className);
+            if (classModel == null) {
+                classModel = new ClassModel(className, apiClass);
+                classesCache.put(classModel.name, classModel);
+            }
             classModel._static = true;
 
             if (nodeModel.name.equals(model.initialNode)) {
@@ -234,8 +246,19 @@ public class BuilderPatternCompiler extends GraphCompiler {
         ClassModel initialClass;
     }
 
-    private static MethodModel convertSignature(SignatureModel signatureModel) throws GraphCompilerException {
-        return convertSignature(signatureModel, signatureModel.returnType);
+    private static MethodModel convertTransitionSignature(SignatureModel signatureModel) throws GraphCompilerException {
+        MethodModel ret = new MethodModel(signatureModel.name);
+
+        ret.returnType = convertType(signatureModel.returnType);
+        if (signatureModel.arguments != null) {
+            for (GraphsModel.ArgumentModel argumentModel : signatureModel.arguments) {
+                CodeModel.ArgumentModel codeArgumentModel = new CodeModel.ArgumentModel(convertType(argumentModel.type), argumentModel.name);
+                codeArgumentModel.array = argumentModel.array;
+                codeArgumentModel.vararg = argumentModel.vararg;
+                ret.argumentModels.add(codeArgumentModel);
+            }
+        }
+        return ret;
     }
 
     private static TypeModel convertType(String type) {
@@ -247,10 +270,10 @@ public class BuilderPatternCompiler extends GraphCompiler {
         }
     }
 
-    private static MethodModel convertSignature(SignatureModel signatureModel, String returnType) throws GraphCompilerException {
+    private static MethodModel convertTransitionSignature(SignatureModel signatureModel, ClassModel returnType) throws GraphCompilerException {
         MethodModel ret = new MethodModel(signatureModel.name);
 
-        ret.returnType = convertType(returnType);
+        ret.returnType = new TypeModel(returnType);
         if (signatureModel.arguments != null) {
             for (GraphsModel.ArgumentModel argumentModel : signatureModel.arguments) {
                 CodeModel.ArgumentModel codeArgumentModel = new CodeModel.ArgumentModel(convertType(argumentModel.type), argumentModel.name);

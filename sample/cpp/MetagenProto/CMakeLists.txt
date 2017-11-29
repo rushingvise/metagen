@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD 11)
 
 set(SOURCE_FILES
         src/main.cpp
-        src/sql/QueryBuilder.h
-        src/sql/QueryBuilderApi.h
-        src/sql/QueryBuilderImpl.h
+        src/sql/QueryBuilder.cpp
+        src/sql/QueryBuilderApi.cpp
+        src/sql/QueryBuilderImpl.cpp
         )
 add_executable(MetagenProto ${SOURCE_FILES})

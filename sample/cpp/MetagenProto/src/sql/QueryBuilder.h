@@ -12,9 +12,7 @@ namespace sql {
 class QueryBuilder : public QueryBuilderApi::InitialStep {
 
     public:
-    QueryBuilder() : QueryBuilderApi::InitialStep(QueryBuilderImpl::Content()) {
-    }
-
+    QueryBuilder();
 };
 }
 

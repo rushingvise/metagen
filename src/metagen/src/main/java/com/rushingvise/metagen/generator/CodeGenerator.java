@@ -74,12 +74,20 @@ public abstract class CodeGenerator {
             block(line, block, "");
         }
 
-        public void block(String line, CodeBlock block, String blockSuffix) throws CodeGeneratorException {
+        public void openBlock(String line) {
             println(line + " {");
             mIndentation.append(mSingleIndent);
-            block.writeBlock();
+        }
+
+        public void closeBlock(String blockSuffix) {
             mIndentation.setLength(mIndentation.length() - INDENT_WIDTH);
             mWriter.println(mIndentation.toString() + "}" + blockSuffix);
+        }
+
+        public void block(String line, CodeBlock block, String blockSuffix) throws CodeGeneratorException {
+            openBlock(line);
+            block.writeBlock();
+            closeBlock(blockSuffix);
         }
 
         public interface CodeBlock {

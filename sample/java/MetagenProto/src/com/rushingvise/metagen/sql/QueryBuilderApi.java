@@ -5,28 +5,28 @@ package com.rushingvise.metagen.sql;
 public class QueryBuilderApi  {
 
     public interface ISelectTransition {
-        PostSelectStep select(String... columns);
+        QueryBuilderApi.PostSelectStep select(String... columns);
     }
 
     public interface IFromTransition {
-        PostFromStep from(String table);
+        QueryBuilderApi.PostFromStep from(String table);
     }
 
     public interface IWhereTransition {
-        PostWhereStep where(String expression);
+        QueryBuilderApi.PostWhereStep where(String expression);
     }
 
     public interface IGroupByTransition {
-        PostGroupByStep groupBy(String column);
+        QueryBuilderApi.PostGroupByStep groupBy(String column);
     }
 
     public interface IOrderByTransition {
-        PostOrderByStep orderBy(String... columns);
+        QueryBuilderApi.PostOrderByStep orderBy(String... columns);
     }
 
     public interface IOrderDirectionTransition {
-        PostOrderDirectionStep asc();
-        PostOrderDirectionStep desc();
+        QueryBuilderApi.PostOrderDirectionStep asc();
+        QueryBuilderApi.PostOrderDirectionStep desc();
     }
 
     public interface IBuildQueryTransformation {
@@ -34,35 +34,35 @@ public class QueryBuilderApi  {
     }
 
     public static class InitialStep implements ISelectTransition {
-        private QueryBuilderImpl.Content content;
+        private  QueryBuilderImpl.Content content;
 
         public InitialStep(QueryBuilderImpl.Content _content) {
             content = _content;
         }
 
         @Override
-        public PostSelectStep select(String... columns) {
+        public QueryBuilderApi.PostSelectStep select(String... columns) {
             QueryBuilderImpl.Logic.selectTransitionSelect(content, columns);
-            return new PostSelectStep(content);
+            return new QueryBuilderApi.PostSelectStep(content);
         }
 
     }
     public static class PostSelectStep implements IFromTransition {
-        private QueryBuilderImpl.Content content;
+        private  QueryBuilderImpl.Content content;
 
         public PostSelectStep(QueryBuilderImpl.Content _content) {
             content = _content;
         }
 
         @Override
-        public PostFromStep from(String table) {
+        public QueryBuilderApi.PostFromStep from(String table) {
             QueryBuilderImpl.Logic.fromTransitionFrom(content, table);
-            return new PostFromStep(content);
+            return new QueryBuilderApi.PostFromStep(content);
         }
 
     }
     public static class PostFromStep implements IBuildQueryTransformation, IWhereTransition, IGroupByTransition, IOrderByTransition {
-        private QueryBuilderImpl.Content content;
+        private  QueryBuilderImpl.Content content;
 
         public PostFromStep(QueryBuilderImpl.Content _content) {
             content = _content;
@@ -74,26 +74,26 @@ public class QueryBuilderApi  {
         }
 
         @Override
-        public PostWhereStep where(String expression) {
+        public QueryBuilderApi.PostWhereStep where(String expression) {
             QueryBuilderImpl.Logic.whereTransitionWhere(content, expression);
-            return new PostWhereStep(content);
+            return new QueryBuilderApi.PostWhereStep(content);
         }
 
         @Override
-        public PostGroupByStep groupBy(String column) {
+        public QueryBuilderApi.PostGroupByStep groupBy(String column) {
             QueryBuilderImpl.Logic.groupByTransitionGroupBy(content, column);
-            return new PostGroupByStep(content);
+            return new QueryBuilderApi.PostGroupByStep(content);
         }
 
         @Override
-        public PostOrderByStep orderBy(String... columns) {
+        public QueryBuilderApi.PostOrderByStep orderBy(String... columns) {
             QueryBuilderImpl.Logic.orderByTransitionOrderBy(content, columns);
-            return new PostOrderByStep(content);
+            return new QueryBuilderApi.PostOrderByStep(content);
         }
 
     }
     public static class PostWhereStep implements IBuildQueryTransformation, IGroupByTransition, IOrderByTransition {
-        private QueryBuilderImpl.Content content;
+        private  QueryBuilderImpl.Content content;
 
         public PostWhereStep(QueryBuilderImpl.Content _content) {
             content = _content;
@@ -105,20 +105,20 @@ public class QueryBuilderApi  {
         }
 
         @Override
-        public PostGroupByStep groupBy(String column) {
+        public QueryBuilderApi.PostGroupByStep groupBy(String column) {
             QueryBuilderImpl.Logic.groupByTransitionGroupBy(content, column);
-            return new PostGroupByStep(content);
+            return new QueryBuilderApi.PostGroupByStep(content);
         }
 
         @Override
-        public PostOrderByStep orderBy(String... columns) {
+        public QueryBuilderApi.PostOrderByStep orderBy(String... columns) {
             QueryBuilderImpl.Logic.orderByTransitionOrderBy(content, columns);
-            return new PostOrderByStep(content);
+            return new QueryBuilderApi.PostOrderByStep(content);
         }
 
     }
     public static class PostGroupByStep implements IBuildQueryTransformation, IOrderByTransition {
-        private QueryBuilderImpl.Content content;
+        private  QueryBuilderImpl.Content content;
 
         public PostGroupByStep(QueryBuilderImpl.Content _content) {
             content = _content;
@@ -130,34 +130,34 @@ public class QueryBuilderApi  {
         }
 
         @Override
-        public PostOrderByStep orderBy(String... columns) {
+        public QueryBuilderApi.PostOrderByStep orderBy(String... columns) {
             QueryBuilderImpl.Logic.orderByTransitionOrderBy(content, columns);
-            return new PostOrderByStep(content);
+            return new QueryBuilderApi.PostOrderByStep(content);
         }
 
     }
     public static class PostOrderByStep implements IOrderDirectionTransition {
-        private QueryBuilderImpl.Content content;
+        private  QueryBuilderImpl.Content content;
 
         public PostOrderByStep(QueryBuilderImpl.Content _content) {
             content = _content;
         }
 
         @Override
-        public PostOrderDirectionStep asc() {
+        public QueryBuilderApi.PostOrderDirectionStep asc() {
             QueryBuilderImpl.Logic.orderDirectionTransitionAsc(content);
-            return new PostOrderDirectionStep(content);
+            return new QueryBuilderApi.PostOrderDirectionStep(content);
         }
 
         @Override
-        public PostOrderDirectionStep desc() {
+        public QueryBuilderApi.PostOrderDirectionStep desc() {
             QueryBuilderImpl.Logic.orderDirectionTransitionDesc(content);
-            return new PostOrderDirectionStep(content);
+            return new QueryBuilderApi.PostOrderDirectionStep(content);
         }
 
     }
     public static class PostOrderDirectionStep implements IBuildQueryTransformation {
-        private QueryBuilderImpl.Content content;
+        private  QueryBuilderImpl.Content content;
 
         public PostOrderDirectionStep(QueryBuilderImpl.Content _content) {
             content = _content;
