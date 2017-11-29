@@ -16,9 +16,9 @@ limitations under the License.
 
 package com.rushingvise.metagen;
 
-import com.rushingvise.metagen.compiler.BuilderPatternCompiler;
-import com.rushingvise.metagen.compiler.GraphCompiler;
-import com.rushingvise.metagen.compiler.GraphCompilerException;
+import com.rushingvise.metagen.interpreter.BuilderPatternInterpreter;
+import com.rushingvise.metagen.interpreter.GraphInterpreter;
+import com.rushingvise.metagen.interpreter.GraphInterpreterException;
 import com.rushingvise.metagen.generator.*;
 import com.rushingvise.metagen.parser.GraphsModel;
 import com.rushingvise.metagen.parser.GraphsParser;
@@ -74,7 +74,7 @@ public class Main {
             CommandLine commandLine = parser.parse(options, args, false);
             GraphsParser graphsParser = new GraphsParser(commandLine.getOptionValue("i"));
             GraphsModel graphsModel = graphsParser.parse();
-            GraphCompiler analyzer = new BuilderPatternCompiler(graphsModel); // TODO: add analyzer switch
+            GraphInterpreter analyzer = new BuilderPatternInterpreter(graphsModel); // TODO: add analyzer switch
             CodeModel codeModel = analyzer.analyze();
             final String targetLanguage = commandLine.getOptionValue("l");
             final String outputDirectory = commandLine.getOptionValue("o");
@@ -97,7 +97,7 @@ public class Main {
             System.out.println("Exception occurred while parsing the specification: " + e.getMessage());
         } catch (CodeGeneratorException e) {
             System.out.println("Exception occurred while generating the code: " + e.getMessage());
-        } catch (GraphCompilerException e) {
+        } catch (GraphInterpreterException e) {
             System.out.println("Exception occurred while compiling the model: " + e.getMessage());
         }
     }

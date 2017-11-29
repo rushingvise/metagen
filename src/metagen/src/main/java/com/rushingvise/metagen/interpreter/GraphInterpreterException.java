@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-package com.rushingvise.metagen.compiler;
+package com.rushingvise.metagen.interpreter;
 
-public class GraphCompilerException extends Exception {
-    public GraphCompilerException(String message) {
+public class GraphInterpreterException extends Exception {
+    public GraphInterpreterException(String message) {
         super(message);
     }
 }

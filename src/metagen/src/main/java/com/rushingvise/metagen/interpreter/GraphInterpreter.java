@@ -14,17 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-package com.rushingvise.metagen.compiler;
+package com.rushingvise.metagen.interpreter;
 
 import com.rushingvise.metagen.generator.CodeModel;
 import com.rushingvise.metagen.parser.GraphsModel;
 
-public abstract class GraphCompiler {
+public abstract class GraphInterpreter {
     protected final GraphsModel mGraphsModel;
 
-    public GraphCompiler(GraphsModel graphsModel) {
+    public GraphInterpreter(GraphsModel graphsModel) {
         mGraphsModel = graphsModel;
     }
 
-    public abstract CodeModel analyze() throws GraphCompilerException;
+    public abstract CodeModel analyze() throws GraphInterpreterException;
 }

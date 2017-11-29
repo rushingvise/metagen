@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-package com.rushingvise.metagen.compiler;
+package com.rushingvise.metagen.interpreter;
 
 import com.rushingvise.metagen.generator.CodeModel;
 import com.rushingvise.metagen.generator.CodeModel.*;
@@ -25,13 +25,13 @@ import java.util.*;
 
 import static com.rushingvise.metagen.parser.GraphsModel.Utils.findNamedItem;
 
-public class BuilderPatternCompiler extends GraphCompiler {
-    public BuilderPatternCompiler(GraphsModel graphsModel) {
+public class BuilderPatternInterpreter extends GraphInterpreter {
+    public BuilderPatternInterpreter(GraphsModel graphsModel) {
         super(graphsModel);
     }
 
     @Override
-    public CodeModel analyze() throws GraphCompilerException {
+    public CodeModel analyze() throws GraphInterpreterException {
         CodeModel ret = new CodeModel();
         for (GraphModel model : mGraphsModel.graphs) {
             ret.classes.addAll(analyzeGraph(model));
@@ -65,7 +65,7 @@ public class BuilderPatternCompiler extends GraphCompiler {
     }
 
 
-    private List<ClassModel> analyzeGraph(GraphModel model) throws GraphCompilerException {
+    private List<ClassModel> analyzeGraph(GraphModel model) throws GraphInterpreterException {
         List<ClassModel> ret = new ArrayList<>();
 
         ImplementationModel implementationModel = createImplementationModel(model);
@@ -84,7 +84,7 @@ public class BuilderPatternCompiler extends GraphCompiler {
         return ret;
     }
 
-    private ClassModel createApi(GraphModel model, ImplementationModel implementationModel) throws GraphCompilerException {
+    private ClassModel createApi(GraphModel model, ImplementationModel implementationModel) throws GraphInterpreterException {
         ClassModel apiClass = new ClassModel(model.name + "Api");
         final Map<String, InterfaceModel> interfaces = new HashMap<>();
         final TypeModel contentClassType = new TypeModel(implementationModel.contentClass);
@@ -212,7 +212,7 @@ public class BuilderPatternCompiler extends GraphCompiler {
         );
     }
 
-    private ClassModel createMainClass(GraphModel model, ImplementationModel implementationModel) throws GraphCompilerException {
+    private ClassModel createMainClass(GraphModel model, ImplementationModel implementationModel) throws GraphInterpreterException {
         ClassModel apiClass = new ClassModel(model.name);
         ConstructorModel constructorModel = new ConstructorModel(apiClass);
         SuperCallModel superCallModel = new SuperCallModel(implementationModel.initialClass, Arrays.asList(new AllocationModel(new TypeModel(implementationModel.contentClass))));
@@ -246,7 +246,7 @@ public class BuilderPatternCompiler extends GraphCompiler {
         ClassModel initialClass;
     }
 
-    private static MethodModel convertTransitionSignature(SignatureModel signatureModel) throws GraphCompilerException {
+    private static MethodModel convertTransitionSignature(SignatureModel signatureModel) throws GraphInterpreterException {
         MethodModel ret = new MethodModel(signatureModel.name);
 
         ret.returnType = convertType(signatureModel.returnType);
@@ -265,12 +265,12 @@ public class BuilderPatternCompiler extends GraphCompiler {
         if ("string".equals(type)) {
             return TypeModel.TYPE_STRING;
         } else {
-            // TODO: resolve external classes properly, throw new GraphCompilerException("Unsupported type: " + type);
+            // TODO: resolve external classes properly, throw new GraphInterpreterException("Unsupported type: " + type);
             return new TypeModel(type);
         }
     }
 
-    private static MethodModel convertTransitionSignature(SignatureModel signatureModel, ClassModel returnType) throws GraphCompilerException {
+    private static MethodModel convertTransitionSignature(SignatureModel signatureModel, ClassModel returnType) throws GraphInterpreterException {
         MethodModel ret = new MethodModel(signatureModel.name);
 
         ret.returnType = new TypeModel(returnType);
