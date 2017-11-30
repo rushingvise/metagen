@@ -65,13 +65,13 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
     }
 
 
-    private List<ClassModel> analyzeGraph(GraphModel model) throws GraphInterpreterException {
-        List<ClassModel> ret = new ArrayList<>();
+    private List<MainClassModel> analyzeGraph(GraphModel model) throws GraphInterpreterException {
+        List<MainClassModel> ret = new ArrayList<>();
 
         ImplementationModel implementationModel = createImplementationModel(model);
-        final ClassModel implementationClass = implementationModel.implementationClass;
-        final ClassModel apiClass = createApi(model, implementationModel);
-        final ClassModel mainClass = createMainClass(model, implementationModel);
+        final MainClassModel implementationClass = implementationModel.implementationClass;
+        final MainClassModel apiClass = createApi(model, implementationModel);
+        final MainClassModel mainClass = createBuilderClass(model, implementationModel);
 
         mainClass.requiredClasses.add(apiClass);
         mainClass.requiredClasses.add(implementationClass);
@@ -84,8 +84,8 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
         return ret;
     }
 
-    private ClassModel createApi(GraphModel model, ImplementationModel implementationModel) throws GraphInterpreterException {
-        ClassModel apiClass = new ClassModel(model.name + "Api");
+    private MainClassModel createApi(GraphModel model, ImplementationModel implementationModel) throws GraphInterpreterException {
+        MainClassModel apiClass = new MainClassModel(model.name + "Api");
         final Map<String, InterfaceModel> interfaces = new HashMap<>();
         final TypeModel contentClassType = new TypeModel(implementationModel.contentClass);
         final FieldModel contentField = new FieldModel(contentClassType, "content");
@@ -93,15 +93,15 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
         final CodeModel.ArgumentModel contentMethodArgument = new CodeModel.ArgumentModel(contentField.type, contentField.name);
         final CodeModel.ArgumentModel contentConstructorArgument = new CodeModel.ArgumentModel(contentField.type, "_" + contentField.name);
 
-        final Map<String, ClassModel> classesCache = new HashMap<>();
+        final Map<String, InnerClassModel> classesCache = new HashMap<>();
 
         for (EdgeModel edgeModel : model.edges) {
-            InterfaceModel interfaceModel = new InterfaceModel(convertName(edgeModel));
+            InterfaceModel interfaceModel = new InterfaceModel(convertName(edgeModel), apiClass);
             NodeModel targetNode = findNamedItem(model.nodes, edgeModel.target);
             String targetStateName = convertName(targetNode);
-            ClassModel targetStateClass = classesCache.get(targetStateName);
+            InnerClassModel targetStateClass = classesCache.get(targetStateName);
             if (targetStateClass == null) {
-                targetStateClass = new ClassModel(targetStateName, apiClass);
+                targetStateClass = new InnerClassModel(targetStateName, apiClass);
                 classesCache.put(targetStateClass.name, targetStateClass);
             }
             for (SignatureModel signatureModel : edgeModel.signatures) {
@@ -120,7 +120,7 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
         }
 
         for (ActionModel actionModel : model.actions) {
-            InterfaceModel interfaceModel = new InterfaceModel(convertName(actionModel));
+            InterfaceModel interfaceModel = new InterfaceModel(convertName(actionModel), apiClass);
             for (SignatureModel signatureModel : actionModel.signatures) {
                 MethodModel methodModel = convertTransitionSignature(signatureModel);
                 interfaceModel.methodModels.add(methodModel);
@@ -140,12 +140,11 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
 
         for (NodeModel nodeModel : model.nodes) {
             String className = convertName(nodeModel);
-            ClassModel classModel = classesCache.get(className);
+            InnerClassModel classModel = classesCache.get(className);
             if (classModel == null) {
-                classModel = new ClassModel(className, apiClass);
+                classModel = new InnerClassModel(className, apiClass);
                 classesCache.put(classModel.name, classModel);
             }
-            classModel._static = true;
 
             if (nodeModel.name.equals(model.initialNode)) {
                 implementationModel.initialClass = classModel;
@@ -199,12 +198,12 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
                 }
             }
             classModel.fieldModels.add(contentField);
-            apiClass.classes.add(classModel);
+            apiClass.innerClasses.add(classModel);
         }
         return apiClass;
     }
 
-    private MethodCallModel createLogicMethodCall(InterfaceModel interfaceModel, ClassModel logicClassModel, MethodModel methodModel, FieldModel contentField) {
+    private MethodCallModel createLogicMethodCall(InterfaceModel interfaceModel, InnerClassModel logicClassModel, MethodModel methodModel, FieldModel contentField) {
         return new MethodCallModel(
                 logicClassModel,
                 getLogicMethodName(interfaceModel.name, methodModel.name),
@@ -212,8 +211,8 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
         );
     }
 
-    private ClassModel createMainClass(GraphModel model, ImplementationModel implementationModel) throws GraphInterpreterException {
-        ClassModel apiClass = new ClassModel(model.name);
+    private MainClassModel createBuilderClass(GraphModel model, ImplementationModel implementationModel) throws GraphInterpreterException {
+        MainClassModel apiClass = new MainClassModel(model.name);
         ConstructorModel constructorModel = new ConstructorModel(apiClass);
         SuperCallModel superCallModel = new SuperCallModel(implementationModel.initialClass, Arrays.asList(new AllocationModel(new TypeModel(implementationModel.contentClass))));
         constructorModel.constructorBody.add(superCallModel);
@@ -223,13 +222,11 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
     }
 
     private static ImplementationModel createImplementationModel(GraphModel model) {
-        ClassModel implementationClass = new ClassModel(model.name + "Impl");
-        ClassModel contentClass = new ClassModel("Content", implementationClass);
-        contentClass._static = true;
-        ClassModel logicClass = new ClassModel("Logic", implementationClass);
-        logicClass._static = true;
-        implementationClass.classes.add(contentClass);
-        implementationClass.classes.add(logicClass);
+        MainClassModel implementationClass = new MainClassModel(model.name + "Impl");
+        InnerClassModel contentClass = new InnerClassModel("Content", implementationClass);
+        InnerClassModel logicClass = new InnerClassModel("Logic", implementationClass);
+        implementationClass.innerClasses.add(contentClass);
+        implementationClass.innerClasses.add(logicClass);
 
         ImplementationModel implementationModel = new ImplementationModel();
         implementationModel.implementationClass = implementationClass;
@@ -240,10 +237,10 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
     }
 
     private static class ImplementationModel {
-        ClassModel implementationClass;
-        ClassModel logicClass;
-        ClassModel contentClass;
-        ClassModel initialClass;
+        MainClassModel implementationClass;
+        InnerClassModel logicClass;
+        InnerClassModel contentClass;
+        InnerClassModel initialClass;
     }
 
     private static MethodModel convertTransitionSignature(SignatureModel signatureModel) throws GraphInterpreterException {
@@ -270,7 +267,7 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
         }
     }
 
-    private static MethodModel convertTransitionSignature(SignatureModel signatureModel, ClassModel returnType) throws GraphInterpreterException {
+    private static MethodModel convertTransitionSignature(SignatureModel signatureModel, EntityModel returnType) throws GraphInterpreterException {
         MethodModel ret = new MethodModel(signatureModel.name);
 
         ret.returnType = new TypeModel(returnType);

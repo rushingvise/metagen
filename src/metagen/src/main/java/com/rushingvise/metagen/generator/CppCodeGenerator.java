@@ -34,7 +34,7 @@ public class CppCodeGenerator extends CodeGenerator {
     @Override
     public void generate() throws CodeGeneratorException {
         try {
-            for (ClassModel classModel : mCodeModel.classes) {
+            for (MainClassModel classModel : mCodeModel.classes) {
                 File headerFile = new File(mOutputPath, classModel.name + ".h");
                 if (!headerFile.exists()) {
                     headerFile.createNewFile();
@@ -52,30 +52,8 @@ public class CppCodeGenerator extends CodeGenerator {
         }
     }
 
-    private void generateClass(CppInstructionModelSerializer instructionModelSerializer, ClassModel mainClassModel, ClassModel classModel, CodePrintWriter headerWriter, CodePrintWriter cppWriter) throws CodeGeneratorException {
-        if (mainClassModel != classModel) {
-            if (classModel.interfaces.size() > 0) {
-                throw new CodeGeneratorException("Only main class can contain inner interfaces.");
-            }
-            if (classModel.classes.size() > 0) {
-                throw new CodeGeneratorException("Only main class can contain inner classes.");
-            }
-        }
-
-        headerWriter.openBlock(createCppClass(classModel));
+    private void generateClassBody(CppInstructionModelSerializer instructionModelSerializer, AbstractClassModel classModel, CodePrintWriter headerWriter, CodePrintWriter cppWriter) throws CodeGeneratorException {
         Scope classScope = new Scope();
-
-        // Forward declaration
-        for (InterfaceModel interfaceModel : classModel.interfaces) {
-            classScope.updateCurrentVisibility(classModel.visibility, headerWriter);
-            headerWriter.println("class " + interfaceModel.name + ";");
-        }
-
-        // Forward declaration
-        for (ClassModel innerClass : classModel.classes) {
-            classScope.updateCurrentVisibility(classModel.visibility, headerWriter);
-            headerWriter.println("class " + innerClass.name + ";");
-        }
 
         for (FieldModel fieldModel : classModel.fieldModels) {
             classScope.updateCurrentVisibility(fieldModel.visibility, headerWriter);
@@ -87,8 +65,8 @@ public class CppCodeGenerator extends CodeGenerator {
         headerWriter.println();
         for (ConstructorModel constructorModel : classModel.constructorModels) {
             classScope.updateCurrentVisibility(constructorModel.visibility, headerWriter);
-            headerWriter.println(createCppConstructorDeclaration(classModel, constructorModel) + ";");
-            cppWriter.block(createCppConstructorDefinition(classModel, constructorModel, instructionModelSerializer), () -> {
+            headerWriter.println(createCppConstructorDeclaration(constructorModel) + ";");
+            cppWriter.block(createCppConstructorDefinition(constructorModel, instructionModelSerializer), () -> {
                 for (InstructionModel instructionModel : constructorModel.constructorBody) {
                     if (!(instructionModel instanceof SuperCallModel)) {
                         cppWriter.println(instructionModel.accept(instructionModelSerializer) + ';');
@@ -99,33 +77,17 @@ public class CppCodeGenerator extends CodeGenerator {
         }
         for (MethodModel methodModel : classModel.methodModels) {
             classScope.updateCurrentVisibility(methodModel.visibility, headerWriter);
-            headerWriter.println(createCppClassMethodDeclaration(mainClassModel, methodModel) + ";");
-            cppWriter.block(createCppClassMethodDefinition(mainClassModel, classModel, methodModel), () -> {
+            headerWriter.println(createCppClassMethodDeclaration(methodModel) + ";");
+            cppWriter.block(createCppClassMethodDefinition(classModel, methodModel), () -> {
                 for (InstructionModel instructionModel : methodModel.methodBody) {
                     cppWriter.println(instructionModel.accept(instructionModelSerializer) + ';');
                 }
             });
             cppWriter.println();
         }
-
-        for (InterfaceModel interfaceModel : classModel.interfaces) {
-            classScope.updateCurrentVisibility(interfaceModel.visibility, headerWriter);
-            headerWriter.block(createCppInterface(interfaceModel), () -> {
-                for (MethodModel methodModel : interfaceModel.methodModels) {
-                    headerWriter.println(createCppInterfaceMethodDeclaration(classModel, methodModel) + ";");
-                }
-            }, ";");
-            headerWriter.println();
-        }
-
-        for (ClassModel innerClass : classModel.classes) {
-            classScope.updateCurrentVisibility(classModel.visibility, headerWriter);
-            generateClass(instructionModelSerializer, mainClassModel, innerClass, headerWriter, cppWriter);
-        }
-        headerWriter.closeBlock(";");
     }
 
-    private void generateMainClass(ClassModel mainClassModel, CodePrintWriter headerWriter, CodePrintWriter cppWriter) throws CodeGeneratorException {
+    private void generateMainClass(MainClassModel mainClassModel, CodePrintWriter headerWriter, CodePrintWriter cppWriter) throws CodeGeneratorException {
         final CppInstructionModelSerializer instructionModelSerializer = new CppInstructionModelSerializer();
         headerWriter.println("// GENERATED BY METAGEN");
         headerWriter.println("#pragma once");
@@ -133,7 +95,7 @@ public class CppCodeGenerator extends CodeGenerator {
         headerWriter.println("#include <memory>");
         headerWriter.println("#include <string>");
         headerWriter.println("#include <vector>");
-        for (ClassModel requiredClass : mainClassModel.requiredClasses) {
+        for (MainClassModel requiredClass : mainClassModel.requiredClasses) {
             headerWriter.println("#include \"" + requiredClass.name + ".h\"");
         }
         headerWriter.println();
@@ -149,7 +111,42 @@ public class CppCodeGenerator extends CodeGenerator {
             cppWriter.println("using namespace " + mNamespaceName + ";");
             cppWriter.println();
         }
-        generateClass(instructionModelSerializer, mainClassModel, mainClassModel, headerWriter, cppWriter);
+
+        headerWriter.openBlock(createCppClass(mainClassModel));
+        Scope mainClassScope = new Scope();
+
+        // Forward declaration
+        for (InterfaceModel interfaceModel : mainClassModel.interfaces) {
+            mainClassScope.updateCurrentVisibility(mainClassModel.visibility, headerWriter);
+            headerWriter.println("class " + interfaceModel.name + ";");
+        }
+
+        // Forward declaration
+        for (InnerClassModel innerClass : mainClassModel.innerClasses) {
+            mainClassScope.updateCurrentVisibility(mainClassModel.visibility, headerWriter);
+            headerWriter.println("class " + innerClass.name + ";");
+        }
+
+        generateClassBody(instructionModelSerializer, mainClassModel, headerWriter, cppWriter);
+
+        for (InterfaceModel interfaceModel : mainClassModel.interfaces) {
+            mainClassScope.updateCurrentVisibility(interfaceModel.visibility, headerWriter);
+            headerWriter.block(createCppInterface(interfaceModel), () -> {
+                for (MethodModel methodModel : interfaceModel.methodModels) {
+                    headerWriter.println(createCppInterfaceMethodDeclaration(methodModel) + ";");
+                }
+            }, ";");
+            headerWriter.println();
+        }
+
+        for (InnerClassModel innerClass : mainClassModel.innerClasses) {
+            mainClassScope.updateCurrentVisibility(innerClass.visibility, headerWriter);
+            headerWriter.openBlock(createCppClass(innerClass));
+            generateClassBody(instructionModelSerializer, innerClass, headerWriter, cppWriter);
+            headerWriter.closeBlock(";");
+        }
+
+        headerWriter.closeBlock(";");
 
         if (mNamespaceName != null) {
             headerWriter.println("}");
@@ -161,7 +158,7 @@ public class CppCodeGenerator extends CodeGenerator {
         return "class " + interfaceModel.name;
     }
 
-    private String createCppClass(ClassModel classModel) {
+    private String createCppClass(AbstractClassModel classModel) {
         StringBuilder ret = new StringBuilder();
         ret.append("class ");
         ret.append(classModel.name);
@@ -192,7 +189,7 @@ public class CppCodeGenerator extends CodeGenerator {
         }
     }
 
-    private static String createCppInterfaceMethodDeclaration(ClassModel containerClass, MethodModel model) {
+    private static String createCppInterfaceMethodDeclaration(MethodModel model) {
         StringBuilder ret = new StringBuilder();
         ret.append("virtual ");
         ret.append(createCppType(model.returnType));
@@ -207,7 +204,7 @@ public class CppCodeGenerator extends CodeGenerator {
         return ret.toString();
     }
 
-    private static String createCppClassMethodDeclaration(ClassModel containerClass, MethodModel model) {
+    private static String createCppClassMethodDeclaration(MethodModel model) {
         StringBuilder ret = new StringBuilder();
         if (model._static) {
             ret.append("static ");
@@ -226,15 +223,11 @@ public class CppCodeGenerator extends CodeGenerator {
         return ret.toString();
     }
 
-    private static String createCppClassMethodDefinition(ClassModel containerClass, ClassModel classModel, MethodModel model) {
+    private static String createCppClassMethodDefinition(AbstractClassModel classModel, MethodModel model) {
         StringBuilder ret = new StringBuilder();
         ret.append(createCppType(model.returnType));
         ret.append(' ');
-        if (classModel.containerClass != null) {
-            ret.append(classModel.containerClass.name);
-            ret.append("::");
-        }
-        ret.append(classModel.name);
+        ret.append(createCppClassPath(classModel));
         ret.append("::");
         ret.append(model.name);
         StringJoiner arguments = new StringJoiner(", ", "(", ")");
@@ -245,7 +238,7 @@ public class CppCodeGenerator extends CodeGenerator {
         return ret.toString();
     }
 
-    private static String createCppConstructorDeclaration(ClassModel containerClass, ConstructorModel model) {
+    private static String createCppConstructorDeclaration(ConstructorModel model) {
         StringBuilder ret = new StringBuilder();
         ret.append(model.classModel.name);
         StringJoiner arguments = new StringJoiner(", ", "(", ")");
@@ -256,13 +249,9 @@ public class CppCodeGenerator extends CodeGenerator {
         return ret.toString();
     }
 
-    private static String createCppConstructorDefinition(ClassModel containerClass, ConstructorModel model, CppInstructionModelSerializer serializer) {
+    private static String createCppConstructorDefinition(ConstructorModel model, CppInstructionModelSerializer serializer) {
         StringBuilder ret = new StringBuilder();
-        if (model.classModel.containerClass != null) {
-            ret.append(model.classModel.containerClass.name);
-            ret.append("::");
-        }
-        ret.append(model.classModel.name);
+        ret.append(createCppClassPath(model.classModel));
         ret.append("::");
         ret.append(model.classModel.name);
         StringJoiner arguments = new StringJoiner(", ", "(", ")");
@@ -305,15 +294,11 @@ public class CppCodeGenerator extends CodeGenerator {
         return ret.toString();
     }
 
-    private static String createCppFieldDefinition(ClassModel classModel, FieldModel fieldModel) {
+    private static String createCppFieldDefinition(AbstractClassModel classModel, FieldModel fieldModel) {
         StringBuilder ret = new StringBuilder();
         ret.append(createCppType(fieldModel.type));
         ret.append(' ');
-        if (classModel.containerClass != null) {
-            ret.append(classModel.containerClass.name);
-            ret.append("::");
-        }
-        ret.append(classModel.name);
+        ret.append(createCppClassPath(classModel));
         ret.append("::");
         ret.append(fieldModel.name);
         return ret.toString();
@@ -329,21 +314,22 @@ public class CppCodeGenerator extends CodeGenerator {
             if (type.name != null) {
                 ret = type.name;
             } else {
-                ClassModel classModel = type.classModel;
-                StringBuilder typeStringBuilder = new StringBuilder(classModel.name);
-                classModel = classModel.containerClass;
-                while (classModel != null) {
-                    typeStringBuilder.insert(0, "::");
-                    typeStringBuilder.insert(0, classModel.name);
-                    classModel = classModel.containerClass;
-                }
-                ret = typeStringBuilder.toString();
+                EntityModel entityModel = type.entityModel;
+                ret = createCppClassPath(entityModel);
             }
             if (type.reference) {
                 return "std::shared_ptr<" + ret + ">";
             } else {
                 return ret;
             }
+        }
+    }
+
+    private static String createCppClassPath(EntityModel entityModel) {
+        if (entityModel instanceof InnerEntityModel) {
+            return ((InnerEntityModel) entityModel).getOuterClass().name + "::" + entityModel.name;
+        } else {
+            return entityModel.name;
         }
     }
 
@@ -387,8 +373,7 @@ public class CppCodeGenerator extends CodeGenerator {
         public String visit(MethodCallModel methodCallModel) {
             StringBuilder ret = new StringBuilder();
             if (methodCallModel.classInstance != null) {
-                ret.append(methodCallModel.classInstance.containerClass.name).append("::");
-                ret.append(methodCallModel.classInstance.name).append("::");
+                ret.append(createCppClassPath(methodCallModel.classInstance)).append("::");
             } else if (methodCallModel.instance != null) {
                 ret.append(methodCallModel.instance.name);
                 if (methodCallModel.instance.type.reference) {

@@ -21,50 +21,80 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CodeModel {
-    public List<ClassModel> classes = new ArrayList<>();
+    public List<MainClassModel> classes = new ArrayList<>();
 
-    public static class InterfaceModel {
+    public static abstract class EntityModel {
         public String name;
         public List<MethodModel> methodModels = new ArrayList<>();
         public Visibility visibility = Visibility.PUBLIC;
 
-        public InterfaceModel(String name) {
+        public EntityModel(String name) {
             this.name = name;
         }
     }
 
-    public static class ClassModel {
-        public String name;
-        public List<ClassModel> requiredClasses = new ArrayList<>();
-        public ClassModel containerClass;
-        public ClassModel superClass;
-        public List<ConstructorModel> constructorModels = new ArrayList<>();
-        public List<MethodModel> methodModels = new ArrayList<>();
-        public List<FieldModel> fieldModels = new ArrayList<>();
-        public List<InterfaceModel> implementedInterfaceModels = new ArrayList<>();
-        public boolean _static;
-        public Visibility visibility = Visibility.PUBLIC;
+    public interface InnerEntityModel {
+        MainClassModel getOuterClass();
+    }
 
-        public List<ClassModel> classes = new ArrayList<>();
-        public List<InterfaceModel> interfaces = new ArrayList<>();
+    public static class InterfaceModel extends EntityModel implements InnerEntityModel {
+        public MainClassModel outerClass;
 
-        public ClassModel(String name) {
-            this.name = name;
+        public InterfaceModel(String name, MainClassModel outerClass) {
+            super(name);
+            this.outerClass = outerClass;
         }
 
-        public ClassModel(String name, ClassModel containerClass) {
-            this.name = name;
-            this.containerClass = containerClass;
+        @Override
+        public MainClassModel getOuterClass() {
+            return outerClass;
+        }
+    }
+
+    // TODO: rename back to ClassModel
+    public static abstract class AbstractClassModel extends EntityModel {
+        public AbstractClassModel superClass;
+        public List<ConstructorModel> constructorModels = new ArrayList<>();
+        public List<FieldModel> fieldModels = new ArrayList<>();
+        public List<InterfaceModel> implementedInterfaceModels = new ArrayList<>();
+
+        public AbstractClassModel(String name) {
+            super(name);
+        }
+    }
+
+    public static class MainClassModel extends AbstractClassModel {
+        public List<MainClassModel> requiredClasses = new ArrayList<>();
+
+        public List<InnerClassModel> innerClasses = new ArrayList<>();
+        public List<InterfaceModel> interfaces = new ArrayList<>();
+
+        public MainClassModel(String name) {
+            super(name);
+        }
+    }
+
+    public static class InnerClassModel extends AbstractClassModel implements InnerEntityModel {
+        public MainClassModel outerClass;
+
+        public InnerClassModel(String name, MainClassModel outerClass) {
+            super(name);
+            this.outerClass = outerClass;
+        }
+
+        @Override
+        public MainClassModel getOuterClass() {
+            return outerClass;
         }
     }
 
     public static class ConstructorModel {
-        public ClassModel classModel;
+        public AbstractClassModel classModel;
         public Visibility visibility = Visibility.PUBLIC;
         public List<ArgumentModel> argumentModels = new ArrayList<>();
         public List<InstructionModel> constructorBody = new ArrayList<>();
 
-        public ConstructorModel(ClassModel classModel) {
+        public ConstructorModel(AbstractClassModel classModel) {
             this.classModel = classModel;
         }
     }
@@ -128,18 +158,18 @@ public class CodeModel {
         public static final TypeModel TYPE_STRING = new TypeModel("string");
         public static final TypeModel TYPE_VOID = new TypeModel("void");
 
-        public final ClassModel classModel;
+        public final EntityModel entityModel;
         public final String name;
         public boolean reference;
 
         public TypeModel(String name) {
             this.name = name;
-            this.classModel = null;
+            this.entityModel = null;
         }
 
-        public TypeModel(ClassModel classModel) {
+        public TypeModel(EntityModel entityModel) {
             this.name = null;
-            this.classModel = classModel;
+            this.entityModel = entityModel;
         }
     }
 
@@ -245,7 +275,7 @@ public class CodeModel {
 
     public static class MethodCallModel implements RValueModel {
         public final VariableModel instance;
-        public final ClassModel classInstance;
+        public final AbstractClassModel classInstance;
         public String methodName;
         public List<RValueModel> parameters = new ArrayList<>();
 
@@ -256,7 +286,7 @@ public class CodeModel {
             this.parameters.addAll(parameters);
         }
 
-        public MethodCallModel(ClassModel instance, String methodName, List<RValueModel> parameters) {
+        public MethodCallModel(AbstractClassModel instance, String methodName, List<RValueModel> parameters) {
             this.instance = null;
             this.classInstance = instance;
             this.methodName = methodName;
@@ -270,10 +300,10 @@ public class CodeModel {
     }
 
     public static class SuperCallModel implements InstructionModel {
-        public final ClassModel superClass;
+        public final AbstractClassModel superClass;
         public List<RValueModel> parameters = new ArrayList<>();
 
-        public SuperCallModel(ClassModel superClass, List<RValueModel> parameters) {
+        public SuperCallModel(AbstractClassModel superClass, List<RValueModel> parameters) {
             this.superClass = superClass;
             this.parameters.addAll(parameters);
         }
