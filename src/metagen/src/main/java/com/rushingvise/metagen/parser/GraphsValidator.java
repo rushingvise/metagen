@@ -24,13 +24,23 @@ import java.util.Set;
 
 import static com.rushingvise.metagen.parser.GraphsModel.Utils.findNamedItem;
 
+/**
+ * Validates provided {@link GraphModel}.
+ */
 public class GraphsValidator {
     private final GraphsModel mGraphsModel;
 
+    /**
+     * @param graphsModel {@link GraphModel} which should be validated.
+     */
     public GraphsValidator(GraphsModel graphsModel) {
         mGraphsModel = graphsModel;
     }
 
+    /**
+     * Performs validation of the provided {@link GraphModel}.
+     * @throws GraphsParserException
+     */
     public void validate() throws GraphsParserException {
         mGraphsModelValidator.validate(null, mGraphsModel);
     }

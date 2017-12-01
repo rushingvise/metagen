@@ -16,6 +16,9 @@ limitations under the License.
 
 package com.rushingvise.metagen.interpreter;
 
+/**
+ * Exception which is thrown by {@link GraphInterpreterException}.
+ */
 public class GraphInterpreterException extends Exception {
     public GraphInterpreterException(String message) {
         super(message);

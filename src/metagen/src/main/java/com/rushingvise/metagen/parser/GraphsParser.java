@@ -21,13 +21,24 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
 
+/**
+ * XML-based graphs specification parser.
+ */
 public class GraphsParser {
     private final String mFilePath;
 
+    /**
+     * @param filePath Path to the specification file.
+     */
     public GraphsParser(String filePath) {
         mFilePath = filePath;
     }
 
+    /**
+     * Parser the provided specification file.
+     * @return GraphsModel instance.
+     * @throws GraphsParserException
+     */
     public GraphsModel parse() throws GraphsParserException {
         File inputFile = new File(mFilePath);
         GraphsModel graphsModel;

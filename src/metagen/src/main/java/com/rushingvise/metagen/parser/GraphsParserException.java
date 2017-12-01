@@ -16,6 +16,9 @@ limitations under the License.
 
 package com.rushingvise.metagen.parser;
 
+/**
+ * Exception which is thrown by {@link GraphsParser}.
+ */
 public class GraphsParserException extends Exception {
     public GraphsParserException(Throwable e) {
         super(e);

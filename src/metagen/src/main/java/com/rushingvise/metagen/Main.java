@@ -16,45 +16,48 @@ limitations under the License.
 
 package com.rushingvise.metagen;
 
+import com.rushingvise.metagen.generator.*;
 import com.rushingvise.metagen.interpreter.BuilderPatternInterpreter;
 import com.rushingvise.metagen.interpreter.GraphInterpreter;
 import com.rushingvise.metagen.interpreter.GraphInterpreterException;
-import com.rushingvise.metagen.generator.*;
 import com.rushingvise.metagen.parser.GraphsModel;
 import com.rushingvise.metagen.parser.GraphsParser;
 import com.rushingvise.metagen.parser.GraphsParserException;
 import org.apache.commons.cli.*;
 
 public class Main {
+    private static final String LANGUAGE_JAVA = "java";
+    private static final String LANGUAGE_CPP = "cpp";
+
     public static void main(String[] args) {
-        Option inputOption = Option.builder("i")
+        final Option inputOption = Option.builder("i")
                 .required(true)
                 .desc("Spec input file")
                 .longOpt("input")
                 .hasArg(true)
                 .build();
-        Option outputOption = Option.builder("o")
+        final Option outputOption = Option.builder("o")
                 .required(true)
                 .desc("Output directory")
                 .longOpt("output")
                 .hasArg(true)
                 .build();
 
-        Option languageOption = Option.builder("l")
+        final Option languageOption = Option.builder("l")
                 .required(true)
                 .desc("Output language [java, cpp]")
                 .longOpt("language")
                 .hasArg(true)
                 .build();
 
-        Option javaPackageOption = Option.builder("jp")
+        final Option javaPackageOption = Option.builder("jp")
                 .required(false)
                 .desc("Java package name")
                 .longOpt("java-package")
                 .hasArg(true)
                 .build();
 
-        Option cppNamespaceOption = Option.builder("cn")
+        final Option cppNamespaceOption = Option.builder("cn")
                 .required(false)
                 .desc("Java package name")
                 .longOpt("cpp-namespace")
@@ -72,18 +75,24 @@ public class Main {
 
         try {
             CommandLine commandLine = parser.parse(options, args, false);
-            GraphsParser graphsParser = new GraphsParser(commandLine.getOptionValue("i"));
+
+            // Parsing the graph specification
+            GraphsParser graphsParser = new GraphsParser(commandLine.getOptionValue(inputOption.getOpt()));
             GraphsModel graphsModel = graphsParser.parse();
+
+            // Interpreting the graph model and creating code model based on it
             GraphInterpreter analyzer = new BuilderPatternInterpreter(graphsModel); // TODO: add analyzer switch
             CodeModel codeModel = analyzer.analyze();
-            final String targetLanguage = commandLine.getOptionValue("l");
-            final String outputDirectory = commandLine.getOptionValue("o");
+
+            // Generating final code
+            final String targetLanguage = commandLine.getOptionValue(languageOption.getOpt());
+            final String outputDirectory = commandLine.getOptionValue(outputOption.getOpt());
             CodeGenerator codeGenerator;
-            if ("java".equals(targetLanguage)) {
-                final String packageName = commandLine.getOptionValue("jp");
+            if (LANGUAGE_JAVA.equals(targetLanguage)) {
+                final String packageName = commandLine.getOptionValue(javaPackageOption.getOpt());
                 codeGenerator = new JavaCodeGenerator(outputDirectory, codeModel, packageName);
-            } else if ("cpp".equals(targetLanguage)) {
-                final String namespaceName = commandLine.getOptionValue("cn");
+            } else if (LANGUAGE_CPP.equals(targetLanguage)) {
+                final String namespaceName = commandLine.getOptionValue(cppNamespaceOption.getOpt());
                 codeGenerator = new CppCodeGenerator(outputDirectory, codeModel, namespaceName);
             } else {
                 throw new ParseException("Unsupported language: " + targetLanguage);

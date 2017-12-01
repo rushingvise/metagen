@@ -16,6 +16,9 @@ limitations under the License.
 
 package com.rushingvise.metagen.generator;
 
+/**
+ * Exception which is thrown by {@link CodeGenerator}.
+ */
 public class CodeGeneratorException extends Exception {
     public CodeGeneratorException(Throwable e) {
         super(e);

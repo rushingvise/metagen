@@ -176,7 +176,7 @@ public class GraphsModel {
         @XmlAttribute(name = "typeName", required = true)
         public String type;
 
-        @XmlAttribute(name = "vararg")
+        @XmlAttribute(name = "variadic")
         public boolean vararg;
 
         @XmlAttribute(name = "array")

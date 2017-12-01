@@ -23,9 +23,18 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.StringJoiner;
 
+/**
+ * Creates C++ classes based on the provided {@link CodeModel}.
+ */
 public class CppCodeGenerator extends CodeGenerator {
     private final String mNamespaceName;
 
+    /**
+     * Generates C++ code based on the given model.
+     * @param outputDirectory Directory in which the C++ files should be created.
+     * @param codeModel Model for which the code should be generated.
+     * @param namespaceName Namespace that will be defined in the generated files.
+     */
     public CppCodeGenerator(String outputDirectory, CodeModel codeModel, String namespaceName) {
         super(outputDirectory, codeModel);
         mNamespaceName = namespaceName;
@@ -34,6 +43,7 @@ public class CppCodeGenerator extends CodeGenerator {
     @Override
     public void generate() throws CodeGeneratorException {
         try {
+            // For each main class model one .cpp and one .h file will be created.
             for (MainClassModel classModel : mCodeModel.classes) {
                 File headerFile = new File(mOutputPath, classModel.name + ".h");
                 if (!headerFile.exists()) {
@@ -53,21 +63,27 @@ public class CppCodeGenerator extends CodeGenerator {
     }
 
     private void generateClassBody(CppInstructionModelSerializer instructionModelSerializer, AbstractClassModel classModel, CodePrintWriter headerWriter, CodePrintWriter cppWriter) throws CodeGeneratorException {
+        // Helper class that will prevent duplication of visibility labels.
         Scope classScope = new Scope();
 
+        // Declaring fields defined in this class.
         for (FieldModel fieldModel : classModel.fieldModels) {
             classScope.updateCurrentVisibility(fieldModel.visibility, headerWriter);
             headerWriter.println(createCppFieldDeclaration(fieldModel) + ";");
+            // Static fields require definition in .cpp file.
             if (fieldModel._static) {
                 cppWriter.println(createCppFieldDefinition(classModel, fieldModel) + ";");
             }
         }
         headerWriter.println();
+
+        // Declaring constructors of this class.
         for (ConstructorModel constructorModel : classModel.constructorModels) {
             classScope.updateCurrentVisibility(constructorModel.visibility, headerWriter);
             headerWriter.println(createCppConstructorDeclaration(constructorModel) + ";");
             cppWriter.block(createCppConstructorDefinition(constructorModel, instructionModelSerializer), () -> {
                 for (InstructionModel instructionModel : constructorModel.constructorBody) {
+                    // Unfortunately super call requires special handling.
                     if (!(instructionModel instanceof SuperCallModel)) {
                         cppWriter.println(instructionModel.accept(instructionModelSerializer) + ';');
                     }
@@ -75,6 +91,7 @@ public class CppCodeGenerator extends CodeGenerator {
             });
             cppWriter.println();
         }
+        // Declaring methods of this class.
         for (MethodModel methodModel : classModel.methodModels) {
             classScope.updateCurrentVisibility(methodModel.visibility, headerWriter);
             headerWriter.println(createCppClassMethodDeclaration(methodModel) + ";");
@@ -113,6 +130,8 @@ public class CppCodeGenerator extends CodeGenerator {
         }
 
         headerWriter.openBlock(createCppClass(mainClassModel));
+
+        // Helper class that will prevent duplication of visibility labels.
         Scope mainClassScope = new Scope();
 
         // Forward declaration
@@ -129,6 +148,7 @@ public class CppCodeGenerator extends CodeGenerator {
 
         generateClassBody(instructionModelSerializer, mainClassModel, headerWriter, cppWriter);
 
+        // Declaring interfaces defined in this class model.
         for (InterfaceModel interfaceModel : mainClassModel.interfaces) {
             mainClassScope.updateCurrentVisibility(interfaceModel.visibility, headerWriter);
             headerWriter.block(createCppInterface(interfaceModel), () -> {
@@ -139,6 +159,7 @@ public class CppCodeGenerator extends CodeGenerator {
             headerWriter.println();
         }
 
+        // Declaring classes defined in this class model.
         for (InnerClassModel innerClass : mainClassModel.innerClasses) {
             mainClassScope.updateCurrentVisibility(innerClass.visibility, headerWriter);
             headerWriter.openBlock(createCppClass(innerClass));
@@ -260,6 +281,7 @@ public class CppCodeGenerator extends CodeGenerator {
         }
         ret.append(arguments.toString());
 
+        // Special handling of the super call.
         if (model.constructorBody.size() > 0) {
             InstructionModel instructionModel = model.constructorBody.get(0);
             if (instructionModel instanceof SuperCallModel) {
@@ -272,7 +294,7 @@ public class CppCodeGenerator extends CodeGenerator {
 
     private static String createCppArgument(ArgumentModel argumentModel) {
         StringBuilder ret = new StringBuilder();
-        if (argumentModel.vararg || argumentModel.array) {
+        if (argumentModel.variadic || argumentModel.array) {
             ret.append("std::vector<").append(createCppType(argumentModel.type)).append(">");
         } else {
             ret.append(createCppType(argumentModel.type));
@@ -422,6 +444,9 @@ public class CppCodeGenerator extends CodeGenerator {
         }
     }
 
+    /**
+     * Helper class that will prevent duplication of visibility labels.
+     */
     private static class Scope {
         private Visibility mVisibility;
 

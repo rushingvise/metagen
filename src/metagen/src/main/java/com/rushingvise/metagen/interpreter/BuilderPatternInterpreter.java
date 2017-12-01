@@ -25,6 +25,18 @@ import java.util.*;
 
 import static com.rushingvise.metagen.parser.GraphsModel.Utils.findNamedItem;
 
+/**
+ * Interprets the given graph as a builder.
+ * Can be used to generate an API of any kind of expression builder.
+ * Each node is treated as an interface that exposes methods that are available at a given phase of building the intended object.
+ * Each edge is treated as a transition between builder phases.
+ * Each action is treated as a generic method available at a defined builder phase, yielding any type of result.
+ *
+ * Three main classes are generated for each of the graphs:
+ * - Builder class - class intended for the end user.
+ * - API class - defines the interfaces available at each phase of building the intended object.
+ * - Implementation class - class in which the logic of the builder should be placed.
+ */
 public class BuilderPatternInterpreter extends GraphInterpreter {
     public BuilderPatternInterpreter(GraphsModel graphsModel) {
         super(graphsModel);
@@ -93,8 +105,10 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
         final CodeModel.ArgumentModel contentMethodArgument = new CodeModel.ArgumentModel(contentField.type, contentField.name);
         final CodeModel.ArgumentModel contentConstructorArgument = new CodeModel.ArgumentModel(contentField.type, "_" + contentField.name);
 
+        // We should use single instance of InnerClassModel for each created class.
         final Map<String, InnerClassModel> classesCache = new HashMap<>();
 
+        // Defining interface models for transitions between builder phases.
         for (EdgeModel edgeModel : model.edges) {
             InterfaceModel interfaceModel = new InterfaceModel(convertName(edgeModel), apiClass);
             NodeModel targetNode = findNamedItem(model.nodes, edgeModel.target);
@@ -119,6 +133,7 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
             apiClass.interfaces.add(interfaceModel);
         }
 
+        // Defining interface models for generic actions.
         for (ActionModel actionModel : model.actions) {
             InterfaceModel interfaceModel = new InterfaceModel(convertName(actionModel), apiClass);
             for (SignatureModel signatureModel : actionModel.signatures) {
@@ -138,6 +153,7 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
             apiClass.interfaces.add(interfaceModel);
         }
 
+        // Creating classes for phases of the building process.
         for (NodeModel nodeModel : model.nodes) {
             String className = convertName(nodeModel);
             InnerClassModel classModel = classesCache.get(className);
@@ -156,6 +172,7 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
                     new VariableModel(contentConstructorArgument.type, contentConstructorArgument.name)));
             classModel.constructorModels.add(constructorModel);
 
+            // Class should implement actions that were included in the node definition.
             if (nodeModel.includedActions != null) {
                 for (IncludeActionModel includeActionModel : nodeModel.includedActions) {
                     InterfaceModel interfaceModel = interfaces.get(convertName(includeActionModel));
@@ -174,6 +191,7 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
                     }
                 }
             }
+            // Class should implement transitions that were included in the node definition.
             if (nodeModel.includedEdges != null) {
                 for (IncludeEdgeModel includeEdgeModel : nodeModel.includedEdges) {
                     InterfaceModel interfaceModel = interfaces.get(convertName(includeEdgeModel));
@@ -251,7 +269,7 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
             for (GraphsModel.ArgumentModel argumentModel : signatureModel.arguments) {
                 CodeModel.ArgumentModel codeArgumentModel = new CodeModel.ArgumentModel(convertType(argumentModel.type), argumentModel.name);
                 codeArgumentModel.array = argumentModel.array;
-                codeArgumentModel.vararg = argumentModel.vararg;
+                codeArgumentModel.variadic = argumentModel.vararg;
                 ret.argumentModels.add(codeArgumentModel);
             }
         }
@@ -275,15 +293,11 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
             for (GraphsModel.ArgumentModel argumentModel : signatureModel.arguments) {
                 CodeModel.ArgumentModel codeArgumentModel = new CodeModel.ArgumentModel(convertType(argumentModel.type), argumentModel.name);
                 codeArgumentModel.array = argumentModel.array;
-                codeArgumentModel.vararg = argumentModel.vararg;
+                codeArgumentModel.variadic = argumentModel.vararg;
                 ret.argumentModels.add(codeArgumentModel);
             }
         }
         return ret;
-    }
-
-    private List<RValueModel> forwardMethodArguments(List<CodeModel.ArgumentModel> argumentModels) {
-        return forwardMethodArguments(argumentModels, null);
     }
 
     private List<RValueModel> forwardMethodArguments(List<CodeModel.ArgumentModel> argumentModels, VariableModel prefixVariable) {

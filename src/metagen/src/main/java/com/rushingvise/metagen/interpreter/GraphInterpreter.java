@@ -19,12 +19,24 @@ package com.rushingvise.metagen.interpreter;
 import com.rushingvise.metagen.generator.CodeModel;
 import com.rushingvise.metagen.parser.GraphsModel;
 
+/**
+ * Abstract class for all graph interpreters.
+ */
 public abstract class GraphInterpreter {
     protected final GraphsModel mGraphsModel;
 
+    /**
+     * @param graphsModel Graphs specification.
+     */
     public GraphInterpreter(GraphsModel graphsModel) {
         mGraphsModel = graphsModel;
     }
 
+    /**
+     * Main function responsible for analyzing the graphs specification.
+     * Should be implemented in the child classes.
+     * @return {@code CodeModel} for the given interpretation type.
+     * @throws GraphInterpreterException
+     */
     public abstract CodeModel analyze() throws GraphInterpreterException;
 }
