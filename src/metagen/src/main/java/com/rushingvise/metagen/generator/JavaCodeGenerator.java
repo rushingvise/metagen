@@ -45,7 +45,7 @@ public class JavaCodeGenerator extends CodeGenerator {
     public void generate() throws CodeGeneratorException {
         try {
             for (MainClassModel classModel : mCodeModel.classes) {
-                File outputFile = new File(mOutputPath, classModel.name + ".java");
+                File outputFile = new File(mOutputPath, classModel.name + ".java" + (classModel.template ? ".template" : ""));
                 if (!outputFile.exists()) {
                     outputFile.createNewFile();
                 }

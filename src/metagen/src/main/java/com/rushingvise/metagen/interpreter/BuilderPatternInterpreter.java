@@ -241,6 +241,7 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
 
     private static ImplementationModel createImplementationModel(GraphModel model) {
         MainClassModel implementationClass = new MainClassModel(model.name + "Impl");
+        implementationClass.template = true;
         InnerClassModel contentClass = new InnerClassModel("Content", implementationClass);
         InnerClassModel logicClass = new InnerClassModel("Logic", implementationClass);
         implementationClass.innerClasses.add(contentClass);

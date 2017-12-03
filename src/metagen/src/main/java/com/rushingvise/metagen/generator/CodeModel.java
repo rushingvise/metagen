@@ -136,6 +136,12 @@ public class CodeModel {
          */
         public List<InterfaceModel> interfaces = new ArrayList<>();
 
+        /**
+         * Hint for the generator.
+         * Indicates that this class should be implemented by the developer.
+         */
+        public boolean template;
+
         public MainClassModel(String name) {
             super(name);
         }

@@ -45,12 +45,12 @@ public class CppCodeGenerator extends CodeGenerator {
         try {
             // For each main class model one .cpp and one .h file will be created.
             for (MainClassModel classModel : mCodeModel.classes) {
-                File headerFile = new File(mOutputPath, classModel.name + ".h");
+                File headerFile = new File(mOutputPath, classModel.name + ".h" + (classModel.template ? ".template" : ""));
                 if (!headerFile.exists()) {
                     headerFile.createNewFile();
                 }
                 CodePrintWriter headerWriter = new CodePrintWriter(new FileOutputStream(headerFile));
-                File cppFile = new File(mOutputPath, classModel.name + ".cpp");
+                File cppFile = new File(mOutputPath, classModel.name + ".cpp" + (classModel.template ? ".template" : ""));
                 if (!cppFile.exists()) {
                     cppFile.createNewFile();
                 }
