@@ -3,7 +3,7 @@
     <edges>
       <edge name="Select" target="PostSelect">
         <signature name="select">
-          <arg name="columns" typeName="string" vararg="true" />
+          <arg name="columns" typeName="string" variadic="true" />
         </signature>
       </edge>
       <edge name="From" target="PostFrom">
@@ -23,7 +23,7 @@
       </edge>
       <edge name="OrderBy" target="PostOrderBy">
         <signature name="orderBy">
-          <arg name="columns" typeName="string" vararg="true" />
+          <arg name="columns" typeName="string" variadic="true" />
         </signature>
       </edge>
       <edge name="OrderDirection" target="PostOrderDirection">
