@@ -14,15 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-#include <iostream>
-#include "sql/ExpressionBuilder.h"
-#include "sql/QueryBuilder.h"
+#include "Types.h"
 
-int main() {
-    sql::QueryBuilder builder;
+using namespace sql;
 
-    auto result = builder.select({ "id", "user", "pass" }).from("users").where(sql::ExpressionBuilder().column("id").greaterThan().number(3).build()).orderBy({ "id" }).asc().build();
+Types::Expression::Expression(const std::string& value) {
+    mValue = value;
+}
 
-    std::cout << (std::string) result << std::endl;
-    return 0;
+Types::Expression::operator std::string() {
+    return mValue;
+}
+
+Types::Query::Query(const std::string& value) {
+    mValue = value;
+}
+
+Types::Query::operator std::string() {
+    return mValue;
 }

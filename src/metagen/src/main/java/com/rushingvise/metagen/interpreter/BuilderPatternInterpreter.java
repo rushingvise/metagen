@@ -18,12 +18,12 @@ package com.rushingvise.metagen.interpreter;
 
 import com.rushingvise.metagen.generator.CodeModel;
 import com.rushingvise.metagen.generator.CodeModel.*;
-import com.rushingvise.metagen.parser.GraphsModel;
-import com.rushingvise.metagen.parser.GraphsModel.*;
+import com.rushingvise.metagen.parser.StructureModel;
+import com.rushingvise.metagen.parser.StructureModel.*;
 
 import java.util.*;
 
-import static com.rushingvise.metagen.parser.GraphsModel.Utils.findNamedItem;
+import static com.rushingvise.metagen.parser.StructureModel.Utils.findNamedItem;
 
 /**
  * Interprets the given graph as a builder.
@@ -37,17 +37,19 @@ import static com.rushingvise.metagen.parser.GraphsModel.Utils.findNamedItem;
  * - API class - defines the interfaces available at each phase of building the intended object.
  * - Implementation class - class in which the logic of the builder should be placed.
  */
-public class BuilderPatternInterpreter extends GraphInterpreter {
-    public BuilderPatternInterpreter(GraphsModel graphsModel) {
-        super(graphsModel);
+public class BuilderPatternInterpreter extends StructureInterpreter {
+    public BuilderPatternInterpreter(StructureModel structureModel) {
+        super(structureModel);
     }
 
     @Override
-    public CodeModel analyze() throws GraphInterpreterException {
+    public CodeModel analyzeGraphs() throws StructureInterpreterException {
         CodeModel ret = new CodeModel();
-        for (GraphModel model : mGraphsModel.graphs) {
+
+        for (GraphModel model : mStructureModel.graphs) {
             ret.classes.addAll(analyzeGraph(model));
         }
+        ret.classes.add(mTypesMainClass);
         return ret;
     }
 
@@ -77,7 +79,7 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
     }
 
 
-    private List<MainClassModel> analyzeGraph(GraphModel model) throws GraphInterpreterException {
+    private List<MainClassModel> analyzeGraph(GraphModel model) throws StructureInterpreterException {
         List<MainClassModel> ret = new ArrayList<>();
 
         ImplementationModel implementationModel = createImplementationModel(model);
@@ -96,10 +98,10 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
         return ret;
     }
 
-    private MainClassModel createApi(GraphModel model, ImplementationModel implementationModel) throws GraphInterpreterException {
+    private MainClassModel createApi(GraphModel model, ImplementationModel implementationModel) throws StructureInterpreterException {
         MainClassModel apiClass = new MainClassModel(model.name + "Api");
         final Map<String, InterfaceModel> interfaces = new HashMap<>();
-        final TypeModel contentClassType = new TypeModel(implementationModel.contentClass);
+        final CodeModel.TypeModel contentClassType = new CodeModel.TypeModel(implementationModel.contentClass);
         final FieldModel contentField = new FieldModel(contentClassType, "content");
         contentField.visibility = Visibility.PRIVATE;
         final CodeModel.ArgumentModel contentMethodArgument = new CodeModel.ArgumentModel(contentField.type, contentField.name);
@@ -126,7 +128,7 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
                 logicMethodModel.name = getLogicMethodName(interfaceModel.name, methodModel.name);
                 logicMethodModel.argumentModels.add(0, contentMethodArgument);
                 logicMethodModel._static = true;
-                logicMethodModel.returnType = TypeModel.TYPE_VOID;
+                logicMethodModel.returnType = CodeModel.TypeModel.TYPE_VOID;
                 implementationModel.logicClass.methodModels.add(logicMethodModel);
             }
             interfaces.put(interfaceModel.name, interfaceModel);
@@ -144,7 +146,7 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
                 logicMethodModel.name = getLogicMethodName(interfaceModel.name, methodModel.name);
                 logicMethodModel.argumentModels.add(0, contentMethodArgument);
                 logicMethodModel._static = true;
-                if (logicMethodModel.returnType != TypeModel.TYPE_VOID) {
+                if (logicMethodModel.returnType != CodeModel.TypeModel.TYPE_VOID) {
                     logicMethodModel.methodBody.add(new ReturnInstructionModel(new NullValueModel()));
                 }
                 implementationModel.logicClass.methodModels.add(logicMethodModel);
@@ -216,7 +218,6 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
                 }
             }
             classModel.fieldModels.add(contentField);
-            apiClass.innerClasses.add(classModel);
         }
         return apiClass;
     }
@@ -229,23 +230,22 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
         );
     }
 
-    private MainClassModel createBuilderClass(GraphModel model, ImplementationModel implementationModel) throws GraphInterpreterException {
+    private MainClassModel createBuilderClass(GraphModel model, ImplementationModel implementationModel) throws StructureInterpreterException {
         MainClassModel apiClass = new MainClassModel(model.name);
         ConstructorModel constructorModel = new ConstructorModel(apiClass);
-        SuperCallModel superCallModel = new SuperCallModel(implementationModel.initialClass, Arrays.asList(new AllocationModel(new TypeModel(implementationModel.contentClass))));
+        SuperCallModel superCallModel = new SuperCallModel(implementationModel.initialClass, Arrays.asList(new AllocationModel(new CodeModel.TypeModel(implementationModel.contentClass))));
         constructorModel.constructorBody.add(superCallModel);
         apiClass.constructorModels.add(constructorModel);
         apiClass.superClass = implementationModel.initialClass;
         return apiClass;
     }
 
-    private static ImplementationModel createImplementationModel(GraphModel model) {
+    private ImplementationModel createImplementationModel(GraphModel model) {
         MainClassModel implementationClass = new MainClassModel(model.name + "Impl");
         implementationClass.template = true;
+        implementationClass.requiredClasses.add(mTypesMainClass);
         InnerClassModel contentClass = new InnerClassModel("Content", implementationClass);
         InnerClassModel logicClass = new InnerClassModel("Logic", implementationClass);
-        implementationClass.innerClasses.add(contentClass);
-        implementationClass.innerClasses.add(logicClass);
 
         ImplementationModel implementationModel = new ImplementationModel();
         implementationModel.implementationClass = implementationClass;
@@ -262,12 +262,12 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
         InnerClassModel initialClass;
     }
 
-    private static MethodModel convertTransitionSignature(SignatureModel signatureModel) throws GraphInterpreterException {
+    private MethodModel convertTransitionSignature(SignatureModel signatureModel) throws StructureInterpreterException {
         MethodModel ret = new MethodModel(signatureModel.name);
 
         ret.returnType = convertType(signatureModel.returnType);
         if (signatureModel.arguments != null) {
-            for (GraphsModel.ArgumentModel argumentModel : signatureModel.arguments) {
+            for (StructureModel.ArgumentModel argumentModel : signatureModel.arguments) {
                 CodeModel.ArgumentModel codeArgumentModel = new CodeModel.ArgumentModel(convertType(argumentModel.type), argumentModel.name);
                 codeArgumentModel.array = argumentModel.array;
                 codeArgumentModel.variadic = argumentModel.vararg;
@@ -277,21 +277,26 @@ public class BuilderPatternInterpreter extends GraphInterpreter {
         return ret;
     }
 
-    private static TypeModel convertType(String type) {
-        if ("string".equals(type)) {
-            return TypeModel.TYPE_STRING;
+    private CodeModel.TypeModel convertType(String type) {
+        if (CodeModel.TypeModel.TYPE_STRING.name.equals(type)) {
+            return CodeModel.TypeModel.TYPE_STRING;
+        } else if (CodeModel.TypeModel.TYPE_INTEGER.name.equals(type)) {
+            return CodeModel.TypeModel.TYPE_INTEGER;
         } else {
-            // TODO: resolve external classes properly, throw new GraphInterpreterException("Unsupported type: " + type);
-            return new TypeModel(type);
+            if (mTypes.containsKey(type)) {
+                return new CodeModel.TypeModel(mTypes.get(type));
+            } else {
+                return new CodeModel.TypeModel(type);
+            }
         }
     }
 
-    private static MethodModel convertTransitionSignature(SignatureModel signatureModel, EntityModel returnType) throws GraphInterpreterException {
+    private MethodModel convertTransitionSignature(SignatureModel signatureModel, EntityModel returnType) throws StructureInterpreterException {
         MethodModel ret = new MethodModel(signatureModel.name);
 
-        ret.returnType = new TypeModel(returnType);
+        ret.returnType = new CodeModel.TypeModel(returnType);
         if (signatureModel.arguments != null) {
-            for (GraphsModel.ArgumentModel argumentModel : signatureModel.arguments) {
+            for (StructureModel.ArgumentModel argumentModel : signatureModel.arguments) {
                 CodeModel.ArgumentModel codeArgumentModel = new CodeModel.ArgumentModel(convertType(argumentModel.type), argumentModel.name);
                 codeArgumentModel.array = argumentModel.array;
                 codeArgumentModel.variadic = argumentModel.vararg;

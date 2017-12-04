@@ -3,15 +3,6 @@
 
 using namespace sql;
 
-QueryBuilderApi::InitialStep::InitialStep(QueryBuilderImpl::Content _content) {
-    content = _content;
-}
-
-QueryBuilderApi::PostSelectStep QueryBuilderApi::InitialStep::select(std::vector<std::string> columns) {
-    QueryBuilderImpl::Logic::selectTransitionSelect(content, columns);
-    return QueryBuilderApi::PostSelectStep(content);
-}
-
 QueryBuilderApi::PostSelectStep::PostSelectStep(QueryBuilderImpl::Content _content) {
     content = _content;
 }
@@ -25,11 +16,11 @@ QueryBuilderApi::PostFromStep::PostFromStep(QueryBuilderImpl::Content _content) 
     content = _content;
 }
 
-std::string QueryBuilderApi::PostFromStep::build() {
+Types::Query QueryBuilderApi::PostFromStep::build() {
     return QueryBuilderImpl::Logic::buildQueryTransformationBuild(content);
 }
 
-QueryBuilderApi::PostWhereStep QueryBuilderApi::PostFromStep::where(std::string expression) {
+QueryBuilderApi::PostWhereStep QueryBuilderApi::PostFromStep::where(Types::Expression expression) {
     QueryBuilderImpl::Logic::whereTransitionWhere(content, expression);
     return QueryBuilderApi::PostWhereStep(content);
 }
@@ -48,7 +39,7 @@ QueryBuilderApi::PostWhereStep::PostWhereStep(QueryBuilderImpl::Content _content
     content = _content;
 }
 
-std::string QueryBuilderApi::PostWhereStep::build() {
+Types::Query QueryBuilderApi::PostWhereStep::build() {
     return QueryBuilderImpl::Logic::buildQueryTransformationBuild(content);
 }
 
@@ -66,7 +57,7 @@ QueryBuilderApi::PostGroupByStep::PostGroupByStep(QueryBuilderImpl::Content _con
     content = _content;
 }
 
-std::string QueryBuilderApi::PostGroupByStep::build() {
+Types::Query QueryBuilderApi::PostGroupByStep::build() {
     return QueryBuilderImpl::Logic::buildQueryTransformationBuild(content);
 }
 
@@ -93,7 +84,16 @@ QueryBuilderApi::PostOrderDirectionStep::PostOrderDirectionStep(QueryBuilderImpl
     content = _content;
 }
 
-std::string QueryBuilderApi::PostOrderDirectionStep::build() {
+Types::Query QueryBuilderApi::PostOrderDirectionStep::build() {
     return QueryBuilderImpl::Logic::buildQueryTransformationBuild(content);
+}
+
+QueryBuilderApi::InitialStep::InitialStep(QueryBuilderImpl::Content _content) {
+    content = _content;
+}
+
+QueryBuilderApi::PostSelectStep QueryBuilderApi::InitialStep::select(std::vector<std::string> columns) {
+    QueryBuilderImpl::Logic::selectTransitionSelect(content, columns);
+    return QueryBuilderApi::PostSelectStep(content);
 }
 

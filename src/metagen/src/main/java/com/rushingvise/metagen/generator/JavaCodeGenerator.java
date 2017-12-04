@@ -236,6 +236,8 @@ public class JavaCodeGenerator extends CodeGenerator {
             return "void";
         } else if (type == TypeModel.TYPE_STRING) {
             return "String";
+        } else if (type == TypeModel.TYPE_INTEGER) {
+            return "int";
         } else if (type.name != null) {
             return type.name;
         } else {

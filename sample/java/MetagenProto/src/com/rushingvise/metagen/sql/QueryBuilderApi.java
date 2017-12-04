@@ -13,7 +13,7 @@ public class QueryBuilderApi  {
     }
 
     public interface IWhereTransition {
-        QueryBuilderApi.PostWhereStep where(String expression);
+        QueryBuilderApi.PostWhereStep where(Types.Expression expression);
     }
 
     public interface IGroupByTransition {
@@ -30,23 +30,9 @@ public class QueryBuilderApi  {
     }
 
     public interface IBuildQueryTransformation {
-        String build();
+        Types.Query build();
     }
 
-    public static class InitialStep implements ISelectTransition {
-        private  QueryBuilderImpl.Content content;
-
-        public InitialStep(QueryBuilderImpl.Content _content) {
-            content = _content;
-        }
-
-        @Override
-        public QueryBuilderApi.PostSelectStep select(String... columns) {
-            QueryBuilderImpl.Logic.selectTransitionSelect(content, columns);
-            return new QueryBuilderApi.PostSelectStep(content);
-        }
-
-    }
     public static class PostSelectStep implements IFromTransition {
         private  QueryBuilderImpl.Content content;
 
@@ -69,12 +55,12 @@ public class QueryBuilderApi  {
         }
 
         @Override
-        public String build() {
+        public Types.Query build() {
             return QueryBuilderImpl.Logic.buildQueryTransformationBuild(content);
         }
 
         @Override
-        public QueryBuilderApi.PostWhereStep where(String expression) {
+        public QueryBuilderApi.PostWhereStep where(Types.Expression expression) {
             QueryBuilderImpl.Logic.whereTransitionWhere(content, expression);
             return new QueryBuilderApi.PostWhereStep(content);
         }
@@ -100,7 +86,7 @@ public class QueryBuilderApi  {
         }
 
         @Override
-        public String build() {
+        public Types.Query build() {
             return QueryBuilderImpl.Logic.buildQueryTransformationBuild(content);
         }
 
@@ -125,7 +111,7 @@ public class QueryBuilderApi  {
         }
 
         @Override
-        public String build() {
+        public Types.Query build() {
             return QueryBuilderImpl.Logic.buildQueryTransformationBuild(content);
         }
 
@@ -164,8 +150,22 @@ public class QueryBuilderApi  {
         }
 
         @Override
-        public String build() {
+        public Types.Query build() {
             return QueryBuilderImpl.Logic.buildQueryTransformationBuild(content);
+        }
+
+    }
+    public static class InitialStep implements ISelectTransition {
+        private  QueryBuilderImpl.Content content;
+
+        public InitialStep(QueryBuilderImpl.Content _content) {
+            content = _content;
+        }
+
+        @Override
+        public QueryBuilderApi.PostSelectStep select(String... columns) {
+            QueryBuilderImpl.Logic.selectTransitionSelect(content, columns);
+            return new QueryBuilderApi.PostSelectStep(content);
         }
 
     }

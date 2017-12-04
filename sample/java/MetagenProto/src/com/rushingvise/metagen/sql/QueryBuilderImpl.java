@@ -36,7 +36,7 @@ public class QueryBuilderImpl  {
             content.query.append("FROM ").append(table).append(" ");
         }
 
-        public static void whereTransitionWhere(QueryBuilderImpl.Content content, String expression) {
+        public static void whereTransitionWhere(QueryBuilderImpl.Content content, Types.Expression expression) {
             content.query.append("WHERE (").append(expression).append(") ");
         }
 
@@ -58,8 +58,8 @@ public class QueryBuilderImpl  {
             content.query.append("DESC ");
         }
 
-        public static String buildQueryTransformationBuild(QueryBuilderImpl.Content content) {
-            return content.query.toString();
+        public static Types.Query buildQueryTransformationBuild(QueryBuilderImpl.Content content) {
+            return new Types.Query(content.query.toString().trim());
         }
 
     }

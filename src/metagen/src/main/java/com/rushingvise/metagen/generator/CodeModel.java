@@ -16,9 +16,7 @@ limitations under the License.
 
 package com.rushingvise.metagen.generator;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * Language-agnostic code descriptor.
@@ -124,17 +122,17 @@ public class CodeModel {
         /**
          * Other main classes on which this class relies (used for generating import or #include statements).
          */
-        public List<MainClassModel> requiredClasses = new ArrayList<>();
+        public Set<MainClassModel> requiredClasses = new LinkedHashSet<>();
 
         /**
          * Models of inner classes of this class.
          */
-        public List<InnerClassModel> innerClasses = new ArrayList<>();
+        public Set<InnerClassModel> innerClasses = new LinkedHashSet<>();
 
         /**
          * Interfaces, which should be declared within the body of this class.
          */
-        public List<InterfaceModel> interfaces = new ArrayList<>();
+        public Set<InterfaceModel> interfaces = new LinkedHashSet<>();
 
         /**
          * Hint for the generator.
@@ -159,6 +157,7 @@ public class CodeModel {
         public InnerClassModel(String name, MainClassModel outerClass) {
             super(name);
             this.outerClass = outerClass;
+            this.outerClass.innerClasses.add(this);
         }
 
         @Override
@@ -331,6 +330,11 @@ public class CodeModel {
          * Language-agnostic string type.
          */
         public static final TypeModel TYPE_STRING = new TypeModel("string");
+
+        /**
+         * Language-agnostic string type.
+         */
+        public static final TypeModel TYPE_INTEGER = new TypeModel("integer");
 
         /**
          * Language-agnostic void type.

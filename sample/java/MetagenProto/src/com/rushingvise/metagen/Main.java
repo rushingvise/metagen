@@ -16,12 +16,15 @@ limitations under the License.
 
 package com.rushingvise.metagen;
 
+import com.rushingvise.metagen.sql.ExpressionBuilder;
 import com.rushingvise.metagen.sql.QueryBuilder;
+import com.rushingvise.metagen.sql.Types;
 
 public class Main {
 
     public static void main(String[] args) {
-        String query = new QueryBuilder().select("id", "user", "pass").from("users").where("id > 3").orderBy("id").asc().build();
+        new ExpressionBuilder().column("id").greaterThan().number(3).build();
+        Types.Query query = new QueryBuilder().select("id", "user", "pass").from("users").where(new ExpressionBuilder().column("id").greaterThan().number(3).build()).orderBy("id").asc().build();
         System.out.println(query);
     }
 }

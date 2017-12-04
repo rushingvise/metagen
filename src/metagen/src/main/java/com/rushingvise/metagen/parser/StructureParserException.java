@@ -14,13 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-package com.rushingvise.metagen.interpreter;
+package com.rushingvise.metagen.parser;
 
 /**
- * Exception which is thrown by {@link GraphInterpreterException}.
+ * Exception which is thrown by {@link StructureParser}.
  */
-public class GraphInterpreterException extends Exception {
-    public GraphInterpreterException(String message) {
+public class StructureParserException extends Exception {
+    public StructureParserException(Throwable e) {
+        super(e);
+    }
+
+    public StructureParserException(String message) {
         super(message);
     }
 }

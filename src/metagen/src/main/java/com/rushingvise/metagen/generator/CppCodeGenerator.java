@@ -331,6 +331,8 @@ public class CppCodeGenerator extends CodeGenerator {
             return "void";
         } else if (type == TypeModel.TYPE_STRING) {
             return "std::string";
+        } else if (type == TypeModel.TYPE_INTEGER) {
+            return "int";
         } else {
             String ret;
             if (type.name != null) {

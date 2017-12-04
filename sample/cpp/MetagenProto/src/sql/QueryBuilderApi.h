@@ -17,13 +17,13 @@ class QueryBuilderApi  {
     class IOrderByTransition;
     class IOrderDirectionTransition;
     class IBuildQueryTransformation;
-    class InitialStep;
     class PostSelectStep;
     class PostFromStep;
     class PostWhereStep;
     class PostGroupByStep;
     class PostOrderByStep;
     class PostOrderDirectionStep;
+    class InitialStep;
 
     class ISelectTransition {
         virtual QueryBuilderApi::PostSelectStep select(std::vector<std::string> columns) =0;
@@ -34,7 +34,7 @@ class QueryBuilderApi  {
     };
 
     class IWhereTransition {
-        virtual QueryBuilderApi::PostWhereStep where(std::string expression) =0;
+        virtual QueryBuilderApi::PostWhereStep where(Types::Expression expression) =0;
     };
 
     class IGroupByTransition {
@@ -51,17 +51,9 @@ class QueryBuilderApi  {
     };
 
     class IBuildQueryTransformation {
-        virtual std::string build() =0;
+        virtual Types::Query build() =0;
     };
 
-    class InitialStep : public ISelectTransition {
-        private:
-         QueryBuilderImpl::Content content;
-
-        public:
-        InitialStep(QueryBuilderImpl::Content _content);
-        QueryBuilderApi::PostSelectStep select(std::vector<std::string> columns) override;
-    };
     class PostSelectStep : public IFromTransition {
         private:
          QueryBuilderImpl::Content content;
@@ -76,8 +68,8 @@ class QueryBuilderApi  {
 
         public:
         PostFromStep(QueryBuilderImpl::Content _content);
-        std::string build() override;
-        QueryBuilderApi::PostWhereStep where(std::string expression) override;
+        Types::Query build() override;
+        QueryBuilderApi::PostWhereStep where(Types::Expression expression) override;
         QueryBuilderApi::PostGroupByStep groupBy(std::string column) override;
         QueryBuilderApi::PostOrderByStep orderBy(std::vector<std::string> columns) override;
     };
@@ -87,7 +79,7 @@ class QueryBuilderApi  {
 
         public:
         PostWhereStep(QueryBuilderImpl::Content _content);
-        std::string build() override;
+        Types::Query build() override;
         QueryBuilderApi::PostGroupByStep groupBy(std::string column) override;
         QueryBuilderApi::PostOrderByStep orderBy(std::vector<std::string> columns) override;
     };
@@ -97,7 +89,7 @@ class QueryBuilderApi  {
 
         public:
         PostGroupByStep(QueryBuilderImpl::Content _content);
-        std::string build() override;
+        Types::Query build() override;
         QueryBuilderApi::PostOrderByStep orderBy(std::vector<std::string> columns) override;
     };
     class PostOrderByStep : public IOrderDirectionTransition {
@@ -115,7 +107,15 @@ class QueryBuilderApi  {
 
         public:
         PostOrderDirectionStep(QueryBuilderImpl::Content _content);
-        std::string build() override;
+        Types::Query build() override;
+    };
+    class InitialStep : public ISelectTransition {
+        private:
+         QueryBuilderImpl::Content content;
+
+        public:
+        InitialStep(QueryBuilderImpl::Content _content);
+        QueryBuilderApi::PostSelectStep select(std::vector<std::string> columns) override;
     };
 };
 }

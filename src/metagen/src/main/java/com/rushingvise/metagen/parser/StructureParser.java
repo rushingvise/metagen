@@ -24,35 +24,35 @@ import java.io.File;
 /**
  * XML-based graphs specification parser.
  */
-public class GraphsParser {
+public class StructureParser {
     private final String mFilePath;
 
     /**
      * @param filePath Path to the specification file.
      */
-    public GraphsParser(String filePath) {
+    public StructureParser(String filePath) {
         mFilePath = filePath;
     }
 
     /**
      * Parser the provided specification file.
-     * @return GraphsModel instance.
-     * @throws GraphsParserException
+     * @return StructureModel instance.
+     * @throws StructureParserException
      */
-    public GraphsModel parse() throws GraphsParserException {
+    public StructureModel parse() throws StructureParserException {
         File inputFile = new File(mFilePath);
-        GraphsModel graphsModel;
+        StructureModel structureModel;
 
         try {
-            JAXBContext jaxbContext = JAXBContext.newInstance(GraphsModel.class);
+            JAXBContext jaxbContext = JAXBContext.newInstance(StructureModel.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            graphsModel = (GraphsModel) jaxbUnmarshaller.unmarshal(inputFile);
-            GraphsValidator validator = new GraphsValidator(graphsModel);
+            structureModel = (StructureModel) jaxbUnmarshaller.unmarshal(inputFile);
+            StructureValidator validator = new StructureValidator(structureModel);
             validator.validate();
         } catch (JAXBException e) {
-            throw new GraphsParserException(e);
+            throw new StructureParserException(e);
         }
 
-        return graphsModel;
+        return structureModel;
     }
 }

@@ -19,19 +19,20 @@ package com.rushingvise.metagen.parser;
 import javax.xml.bind.annotation.*;
 import java.util.List;
 
-@XmlRootElement(name = "graphs")
-public class GraphsModel {
+@XmlRootElement(name = "structure")
+public class StructureModel {
     @XmlElements(
             @XmlElement(name = "graph", type = GraphModel.class)
     )
     public List<GraphModel> graphs;
 
+
+    @XmlElementWrapper(name = "types")
+    @XmlElement(name = "type")
+    public List<TypeModel> types;
+
     public interface NamedModel {
         String getName();
-    }
-
-    public interface SignatureModelHolder {
-        boolean isReturnTypeAllowed();
     }
 
     @XmlRootElement(name = "graph")
@@ -60,8 +61,19 @@ public class GraphsModel {
         }
     }
 
+    @XmlRootElement(name = "type")
+    public static class TypeModel implements NamedModel {
+        @XmlAttribute(name = "name", required = true)
+        public String name;
+
+        @Override
+        public String getName() {
+            return name;
+        }
+    }
+
     @XmlRootElement(name = "edge")
-    public static class EdgeModel implements NamedModel, SignatureModelHolder {
+    public static class EdgeModel implements NamedModel {
         @XmlAttribute(name = "name", required = true)
         public String name;
 
@@ -78,15 +90,10 @@ public class GraphsModel {
         public String getName() {
             return name;
         }
-
-        @Override
-        public boolean isReturnTypeAllowed() {
-            return false;
-        }
     }
 
     @XmlRootElement(name = "action")
-    public static class ActionModel implements NamedModel, SignatureModelHolder {
+    public static class ActionModel implements NamedModel {
         @XmlAttribute(name = "name", required = true)
         public String name;
 
@@ -98,11 +105,6 @@ public class GraphsModel {
         @Override
         public String getName() {
             return name;
-        }
-
-        @Override
-        public boolean isReturnTypeAllowed() {
-            return true;
         }
     }
 

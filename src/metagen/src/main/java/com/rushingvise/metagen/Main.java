@@ -18,11 +18,11 @@ package com.rushingvise.metagen;
 
 import com.rushingvise.metagen.generator.*;
 import com.rushingvise.metagen.interpreter.BuilderPatternInterpreter;
-import com.rushingvise.metagen.interpreter.GraphInterpreter;
-import com.rushingvise.metagen.interpreter.GraphInterpreterException;
-import com.rushingvise.metagen.parser.GraphsModel;
-import com.rushingvise.metagen.parser.GraphsParser;
-import com.rushingvise.metagen.parser.GraphsParserException;
+import com.rushingvise.metagen.interpreter.StructureInterpreter;
+import com.rushingvise.metagen.interpreter.StructureInterpreterException;
+import com.rushingvise.metagen.parser.StructureModel;
+import com.rushingvise.metagen.parser.StructureParser;
+import com.rushingvise.metagen.parser.StructureParserException;
 import org.apache.commons.cli.*;
 
 public class Main {
@@ -77,11 +77,11 @@ public class Main {
             CommandLine commandLine = parser.parse(options, args, false);
 
             // Parsing the graph specification
-            GraphsParser graphsParser = new GraphsParser(commandLine.getOptionValue(inputOption.getOpt()));
-            GraphsModel graphsModel = graphsParser.parse();
+            StructureParser structureParser = new StructureParser(commandLine.getOptionValue(inputOption.getOpt()));
+            StructureModel structureModel = structureParser.parse();
 
             // Interpreting the graph model and creating code model based on it
-            GraphInterpreter analyzer = new BuilderPatternInterpreter(graphsModel); // TODO: add analyzer switch
+            StructureInterpreter analyzer = new BuilderPatternInterpreter(structureModel); // TODO: add analyzer switch
             CodeModel codeModel = analyzer.analyze();
 
             // Generating final code
@@ -102,11 +102,11 @@ public class Main {
             System.out.println(exception.getMessage());
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("metagen", options);
-        } catch (GraphsParserException e) {
+        } catch (StructureParserException e) {
             System.out.println("Exception occurred while parsing the specification: " + e.getMessage());
         } catch (CodeGeneratorException e) {
             System.out.println("Exception occurred while generating the code: " + e.getMessage());
-        } catch (GraphInterpreterException e) {
+        } catch (StructureInterpreterException e) {
             System.out.println("Exception occurred while compiling the model: " + e.getMessage());
         }
     }

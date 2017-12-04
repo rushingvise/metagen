@@ -14,15 +14,33 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-#include <iostream>
-#include "sql/ExpressionBuilder.h"
-#include "sql/QueryBuilder.h"
+package com.rushingvise.metagen.sql;
 
-int main() {
-    sql::QueryBuilder builder;
+public class Types  {
 
-    auto result = builder.select({ "id", "user", "pass" }).from("users").where(sql::ExpressionBuilder().column("id").greaterThan().number(3).build()).orderBy({ "id" }).asc().build();
+    public static class Expression  {
+        private final String mValue;
 
-    std::cout << (std::string) result << std::endl;
-    return 0;
+        public Expression(String value) {
+            mValue = value;
+        }
+
+        @Override
+        public String toString() {
+            return mValue;
+        }
+    }
+
+    public static class Query  {
+        private final String mValue;
+
+        public Query(String value) {
+            mValue = value;
+        }
+
+        @Override
+        public String toString() {
+            return mValue;
+        }
+    }
 }

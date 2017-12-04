@@ -16,37 +16,43 @@ limitations under the License.
 
 package com.rushingvise.metagen.parser;
 
-import com.rushingvise.metagen.parser.GraphsModel.*;
+import com.rushingvise.metagen.parser.StructureModel.*;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.rushingvise.metagen.parser.GraphsModel.Utils.findNamedItem;
+import static com.rushingvise.metagen.parser.StructureModel.Utils.findNamedItem;
 
 /**
- * Validates provided {@link GraphModel}.
+ * Validates provided {@link StructureModel}.
  */
-public class GraphsValidator {
-    private final GraphsModel mGraphsModel;
+public class StructureValidator {
+    private static final Set<String> BUILT_IN_TYPES = new HashSet<>();
+    static {
+        BUILT_IN_TYPES.add("string");
+        BUILT_IN_TYPES.add("integer");
+    }
+
+    private final StructureModel mStructureModel;
 
     /**
-     * @param graphsModel {@link GraphModel} which should be validated.
+     * @param structureModel {@link GraphModel} which should be validated.
      */
-    public GraphsValidator(GraphsModel graphsModel) {
-        mGraphsModel = graphsModel;
+    public StructureValidator(StructureModel structureModel) {
+        mStructureModel = structureModel;
     }
 
     /**
      * Performs validation of the provided {@link GraphModel}.
-     * @throws GraphsParserException
+     * @throws StructureParserException
      */
-    public void validate() throws GraphsParserException {
-        mGraphsModelValidator.validate(null, mGraphsModel);
+    public void validate() throws StructureParserException {
+        mGraphsModelValidator.validate(null, mStructureModel);
     }
 
     interface Validator<TContext, T> {
-        void validate(TContext context, T object) throws GraphsParserException;
+        void validate(TContext context, T object) throws StructureParserException;
     }
 
     private final Validator<GraphModel, IncludeActionModel> mIncludeActionModelValidator = (context, object) -> {
@@ -70,22 +76,40 @@ public class GraphsValidator {
         }
     };
 
-    private final Validator<SignatureModelHolder, SignatureModel> mSignatureValidator = (context, object) -> {
-        if (object.arguments != null) {
-            validateNames(object.arguments, "<arg>");
-        }
-
-        if (!context.isReturnTypeAllowed()) {
-            validate(object.returnType == null, "<signature name=\"" + object.name + "\"> return typeName not allowed.");
-        } else if (object.returnType != null) {
-            validateIfNotEmpty(object.returnType, "<signature name=\"" + object.name + "\"> return typeName cannot be empty.");
+    private final Validator<GraphModel, List<ArgumentModel>> mArgumentsValidator = (context, object) -> {
+        if (object != null) {
+            validateNames(object, "<arg>");
+            for (ArgumentModel argumentModel : object) {
+                validate(isProperType(argumentModel.type), "<arg name=\"" + argumentModel.name + "\"> type \"" + argumentModel.type + "\" is not known.");
+            }
         }
     };
+
+    private final Validator<GraphModel, SignatureModel> mActionSignatureValidator = (context, object) -> {
+        mArgumentsValidator.validate(context, object.arguments);
+        if (object.returnType != null) {
+            validateIfNotEmpty(object.returnType, "<signature name=\"" + object.name + "\"> return attribute cannot be empty.");
+            validate(isProperType(object.returnType), "<signature name=\"" + object.name + "\"> type \"" + object.returnType + "\" in return attribute is not known.");
+        }
+    };
+
+    private final Validator<GraphModel, SignatureModel> mEdgeSignatureValidator = (context, object) -> {
+        mArgumentsValidator.validate(context, object.arguments);
+        validate(object.returnType == null, "<signature name=\"" + object.name + "\"> return attribute not allowed.");
+    };
+
+    private boolean isProperType(String typeName) {
+        if (BUILT_IN_TYPES.contains(typeName)) {
+            return true;
+        } else {
+            return findNamedItem(mStructureModel.types, typeName) != null;
+        }
+    }
 
     private final Validator<GraphModel, ActionModel> mActionModelValidator = (context, object) -> {
         validateNames(object.signatures, "<signature>");
         for (SignatureModel signatureModel : object.signatures) {
-            mSignatureValidator.validate(object, signatureModel);
+            mActionSignatureValidator.validate(context, signatureModel);
         }
     };
 
@@ -93,11 +117,11 @@ public class GraphsValidator {
         validateNames(object.signatures, "<signature>");
         validateIfNotNull(findNamedItem(context.nodes, object.target), "<edge> \"target\" attribute points non-existing node \"" + object.target + "\".");
         for (SignatureModel signatureModel : object.signatures) {
-            mSignatureValidator.validate(object, signatureModel);
+            mEdgeSignatureValidator.validate(context, signatureModel);
         }
     };
 
-    private final Validator<GraphsModel, GraphModel> mGraphModelValidator = (context, object) -> {
+    private final Validator<StructureModel, GraphModel> mGraphModelValidator = (context, object) -> {
         validateNames(object.nodes, "<node>");
         for (NodeModel nodeModel : object.nodes) {
             mNodeModelValidator.validate(object, nodeModel);
@@ -114,40 +138,41 @@ public class GraphsValidator {
         validateIfNotNull(findNamedItem(object.nodes, object.initialNode), "<graph> \"initial_node\" attribute points non-existing node \"" + object.initialNode + "\".");
     };
 
-    private final Validator<Void, GraphsModel> mGraphsModelValidator = (context, object) -> {
+    private final Validator<Void, StructureModel> mGraphsModelValidator = (context, object) -> {
         validateNames(object.graphs, "<graph>");
+        validateNames(object.types, "<type>");
         for (GraphModel graphModel : object.graphs) {
             mGraphModelValidator.validate(object, graphModel);
         }
     };
 
-    private static void validateNames(List<? extends NamedModel> namedModels, String tag) throws GraphsParserException {
+    private static void validateNames(List<? extends NamedModel> namedModels, String tag) throws StructureParserException {
         Set<String> names = new HashSet<>();
         for (NamedModel model : namedModels) {
             validateIfNotEmpty(model.getName(), tag + " \"name\" attribute is required.");
             if (names.contains(model.getName())) {
-                throw new GraphsParserException(tag + " \"name\" attribute with value \"" + model.getName() + "\" is duplicated.");
+                throw new StructureParserException(tag + " \"name\" attribute with value \"" + model.getName() + "\" is duplicated.");
             } else {
                 names.add(model.getName());
             }
         }
     }
 
-    private static void validateIfNotEmpty(String value, String message) throws GraphsParserException {
+    private static void validateIfNotEmpty(String value, String message) throws StructureParserException {
         if (value == null || value.trim().length() == 0) {
-            throw new GraphsParserException(message);
+            throw new StructureParserException(message);
         }
     }
 
-    private static void validateIfNotNull(Object value, String message) throws GraphsParserException {
+    private static void validateIfNotNull(Object value, String message) throws StructureParserException {
         if (value == null) {
-            throw new GraphsParserException(message);
+            throw new StructureParserException(message);
         }
     }
 
-    private static void validate(boolean condition, String message) throws GraphsParserException {
+    private static void validate(boolean condition, String message) throws StructureParserException {
         if (!condition) {
-            throw new GraphsParserException(message);
+            throw new StructureParserException(message);
         }
     }
 }

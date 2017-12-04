@@ -1,4 +1,9 @@
-<graphs>
+<structure>
+  <types>
+    <type name="Expression" />
+    <type name="Query" />
+  </types>
+  <!-- Select query -->
   <graph name="QueryBuilder" initial_node="Initial">
     <edges>
       <edge name="Select" target="PostSelect">
@@ -13,7 +18,7 @@
       </edge>
       <edge name="Where" target="PostWhere">
         <signature name="where">
-          <arg name="expression" typeName="string" />
+          <arg name="expression" typeName="Expression" />
         </signature>
       </edge>
       <edge name="GroupBy" target="PostGroupBy">
@@ -33,10 +38,9 @@
     </edges>
     <actions>
       <action name="BuildQuery">
-        <signature name="build" return="string" />
+        <signature name="build" return="Query" />
       </action>
     </actions>
-
     <nodes>
       <node name="Initial">
         <include-edge name="Select" />
@@ -67,4 +71,55 @@
       </node>
     </nodes>
   </graph>
-</graphs>
+  <!-- Expression -->
+  <graph name="ExpressionBuilder" initial_node="Expression">
+    <edges>
+      <edge name="Expression" target="PostExpression">
+        <signature name="tableColumn">
+          <arg name="table" typeName="string"/>
+          <arg name="column" typeName="string"/>
+        </signature>
+        <signature name="column">
+          <arg name="column" typeName="string"/>
+        </signature>
+        <signature name="string">
+          <arg name="value" typeName="string"/>
+        </signature>
+        <signature name="number">
+          <arg name="value" typeName="integer"/>
+        </signature>
+        <signature name="expression">
+          <arg name="expression" typeName="Expression"/>
+        </signature>
+      </edge>
+      <edge name="BinaryOperation" target="PostBinaryOperation">
+        <signature name="equals" />
+        <signature name="lessThan" />
+        <signature name="lessThanOrEqual" />
+        <signature name="greaterThan" />
+        <signature name="greaterThanOrEqual" />
+        <signature name="and" />
+        <signature name="or" />
+        <signature name="plus" />
+        <signature name="minus" />
+      </edge>
+    </edges>
+    <actions>
+      <action name="BuildExpression">
+        <signature name="build" return="Expression" />
+      </action>
+    </actions>
+    <nodes>
+      <node name="Expression">
+        <include-edge name="Expression" />
+      </node>
+      <node name="PostExpression">
+        <include-action name="BuildExpression" />
+        <include-edge name="BinaryOperation" />
+      </node>
+      <node name="PostBinaryOperation">
+        <include-edge name="Expression" />
+      </node>
+    </nodes>
+  </graph>
+</structure>
